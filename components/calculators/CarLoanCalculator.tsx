@@ -1,0 +1,628 @@
+'use client';
+import React, { useState, useEffect } from 'react';
+import { ChevronDownIcon } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+
+/* ── DATA ── */
+const STEPS = ['Loan', 'Profile', 'Contact'] as const;
+
+const loanSources = [
+  { id: 'bank',    icon: '🏦', label: 'Bank / Credit Union', sub: 'ANZ, CBA, NAB' },
+  { id: 'dealer',  icon: '🚘', label: 'Car Dealership',       sub: 'In-house finance' },
+  { id: 'broker',  icon: '🤝', label: 'Broker / Lender',      sub: 'Pepper, Latitude' },
+  { id: 'notsure', icon: '🤷', label: 'Not Sure',             sub: "Can't remember" },
+];
+
+const employmentTypes = [
+  { id: 'fulltime',     icon: '💼', label: 'Full-Time' },
+  { id: 'parttime',     icon: '⏰', label: 'Part-Time' },
+  { id: 'selfemployed', icon: '🏢', label: 'Self-Employed' },
+  { id: 'casual',       icon: '📋', label: 'Casual' },
+];
+
+const MARKET_RATE = 6.49;
+
+const LOADING_MSGS = [
+  'Checking current market rates...',
+  'Analysing your loan profile...',
+  'Comparing 20+ lenders...',
+  'Building your personalised report...',
+];
+
+/* ── TYPES ── */
+interface RoastGrade {
+  grade: string;
+  label: string;
+  color: string;
+  bg: string;
+  ring: string;
+  msg: string;
+}
+
+interface FormState {
+  loanAmt: string; currentRate: string; remBal: string; remTerm: string;
+  loanSource: string; employment: string; income: string; state: string;
+  firstName: string; lastName: string; phone: string; email: string;
+}
+
+type Errors = Partial<Record<keyof FormState, string>>;
+
+const EMPTY_FORM: FormState = {
+  loanAmt: '', currentRate: '', remBal: '', remTerm: '',
+  loanSource: '', employment: '', income: '', state: '',
+  firstName: '', lastName: '', phone: '', email: '',
+};
+
+/* ── HELPERS ── */
+function getRoastGrade(rate: number): RoastGrade {
+  if (rate <= 6.5)  return { grade: 'A', label: 'Excellent',    color: 'text-emerald-600', bg: 'bg-emerald-50',  ring: 'ring-emerald-400', msg: "You're already getting a competitive rate. Well done." };
+  if (rate <= 8.0)  return { grade: 'B', label: 'Average',      color: 'text-amber-500',   bg: 'bg-amber-50',    ring: 'ring-amber-400',   msg: "Not terrible — but there may be room to improve." };
+  if (rate <= 10.0) return { grade: 'C', label: 'Above Market', color: 'text-[#FF4C0C]', bg: 'bg-[#FFF1EC]', ring: 'ring-[#FF4C0C]/60', msg: "You're paying more than you should. Time to check your options." };
+  return             { grade: 'D', label: 'Ouch 🔥',            color: 'text-[#FF4C0C]', bg: 'bg-[#FFE0CC]', ring: 'ring-[#FF4C0C]',    msg: "Your rate is significantly above market. You could save thousands." };
+}
+
+function calcSavings(balance: number, currentRate: number, marketRate: number, termYears: number): number {
+  const monthly = (r: number, p: number, t: number): number => {
+    const mr = r / 100 / 12;
+    const n = t * 12;
+    if (mr === 0) return p / n;
+    return (p * mr * Math.pow(1 + mr, n)) / (Math.pow(1 + mr, n) - 1);
+  };
+  const current = monthly(currentRate, balance, termYears) * termYears * 12;
+  const market  = monthly(marketRate,  balance, termYears) * termYears * 12;
+  return Math.max(0, Math.round(current - market));
+}
+
+/* ── SHARED COMPONENT TYPES ── */
+interface StepProps {
+  form: FormState;
+  set: (key: keyof FormState, val: string) => void;
+  errors: Errors;
+  onNext: () => void;
+  onBack?: () => void;
+}
+
+/* ── MAIN CALCULATOR ── */
+export default function CarLoanCalculator() {
+  const [step, setStep]             = useState(0);
+  const [animDir, setAnimDir]       = useState<'forward' | 'back'>('forward');
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [showResult, setShowResult] = useState(false);
+  const [isLoading, setIsLoading]   = useState(false);
+  const [form, setForm]             = useState<FormState>(EMPTY_FORM);
+  const [errors, setErrors]         = useState<Errors>({});
+
+  const set = (key: keyof FormState, val: string) => setForm(f => ({ ...f, [key]: val }));
+
+  const savings = form.remBal && form.currentRate && form.remTerm
+    ? calcSavings(parseFloat(form.remBal), parseFloat(form.currentRate), MARKET_RATE, parseFloat(form.remTerm))
+    : 0;
+
+  const roast = form.currentRate ? getRoastGrade(parseFloat(form.currentRate)) : null;
+
+  function goNext() {
+    setAnimDir('forward');
+    setIsAnimating(true);
+    setTimeout(() => { setStep(s => s + 1); setIsAnimating(false); }, 280);
+  }
+
+  function goBack() {
+    setAnimDir('back');
+    setIsAnimating(true);
+    setTimeout(() => { setStep(s => s - 1); setIsAnimating(false); }, 280);
+  }
+
+  function validateStep0(): boolean {
+    const e: Errors = {};
+    if (!form.loanAmt    || isNaN(Number(form.loanAmt)))    e.loanAmt    = 'Required';
+    if (!form.currentRate || isNaN(Number(form.currentRate))) e.currentRate = 'Required';
+    if (!form.remBal     || isNaN(Number(form.remBal)))     e.remBal     = 'Required';
+    if (!form.remTerm)                                       e.remTerm    = 'Required';
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  function validateStep1(): boolean {
+    const e: Errors = {};
+    if (!form.loanSource) e.loanSource = 'Required';
+    if (!form.employment) e.employment = 'Required';
+    if (!form.income || isNaN(Number(form.income))) e.income = 'Required';
+    if (!form.state)  e.state = 'Required';
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  function handleStep0() { if (validateStep0()) goNext(); }
+  function handleStep1() { if (validateStep1()) goNext(); }
+
+  function handleSubmit() {
+    const e: Errors = {};
+    if (!form.firstName) e.firstName = 'Required';
+    if (!form.lastName)  e.lastName  = 'Required';
+    if (!form.phone)     e.phone     = 'Required';
+    if (!form.email || !form.email.includes('@')) e.email = 'Valid email required';
+    setErrors(e);
+    if (Object.keys(e).length > 0) return;
+    setIsLoading(true);
+    setTimeout(() => { setIsLoading(false); setShowResult(true); }, 2200);
+  }
+
+  const progress = showResult ? 100 : ((step + 1) / STEPS.length) * 100;
+
+  if (showResult && roast) {
+    return (
+      <ResultScreen
+        form={form} roast={roast} savings={savings}
+        onReset={() => { setShowResult(false); setStep(0); setForm(EMPTY_FORM); }}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-gradient-to-br from-slate-50 via-white to-[#fff5f0]">
+      <div className="w-full max-w-[490px] bg-white rounded-3xl overflow-hidden shadow-[0_32px_80px_-8px_rgba(0,0,0,0.10),0_8px_32px_-8px_rgba(255,76,12,0.07)] ring-1 ring-black/5">
+
+        {/* Top accent */}
+        <div className="h-1 bg-gradient-to-r from-[#FF4C0C] to-[#ff6b35]" />
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-5">
+          <span className="inline-flex items-center gap-1.5 bg-[#FF4C0C] text-white rounded-full px-3.5 py-1 text-[11px] font-bold tracking-widest uppercase">
+            🔥 Free Rate Roast
+          </span>
+          <div className="flex items-center gap-2">
+            {STEPS.map((s, i) => (
+              <div key={s} className="flex items-center gap-2">
+                <div
+                  className={cn(
+                    'w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-300',
+                    i < step  && 'bg-[#FF4C0C] text-white scale-100',
+                    i === step && 'bg-[#FF4C0C] text-white scale-110 shadow-md shadow-black/20',
+                    i > step  && 'bg-gray-100 text-gray-400',
+                  )}
+                >
+                  {i < step ? '✓' : i + 1}
+                </div>
+                {i < STEPS.length - 1 && (
+                  <div className={cn('w-5 h-0.5 rounded-full transition-colors duration-300', i < step ? 'bg-[#FF4C0C]' : 'bg-gray-200')} />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="mx-6 mt-4 h-1 bg-gray-100 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-[#FF4C0C] to-[#ff6b35] rounded-full transition-[width] duration-500 ease-out"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+
+        {/* Rate preview chip */}
+        {form.currentRate && roast && (
+          <div className="mx-6 mt-3 flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
+            <span className="text-xs text-gray-400 font-medium">Your rate:</span>
+            <span className={cn('text-sm font-bold', roast.color)}>
+              {form.currentRate}% — {roast.label}
+            </span>
+          </div>
+        )}
+
+        {/* Step content */}
+        <div className="overflow-hidden">
+          <div
+            className="transition-[opacity,transform] duration-[250ms] ease-in-out"
+            style={{
+              opacity: isAnimating ? 0 : 1,
+              transform: isAnimating
+                ? animDir === 'forward' ? 'translateX(-14px)' : 'translateX(14px)'
+                : 'translateX(0)',
+            }}
+          >
+            {step === 0 && <Step0 form={form} set={set} errors={errors} onNext={handleStep0} />}
+            {step === 1 && <Step1 form={form} set={set} errors={errors} onNext={handleStep1} onBack={goBack} />}
+            {step === 2 && (isLoading
+              ? <LoadingScreen />
+              : <Step2 form={form} set={set} errors={errors} onSubmit={handleSubmit} onBack={goBack} />
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── STEP 0 ── */
+function Step0({ form, set, errors, onNext }: StepProps) {
+  const liveSavings = form.remBal && form.currentRate && form.remTerm
+    ? calcSavings(parseFloat(form.remBal), parseFloat(form.currentRate), MARKET_RATE, parseFloat(form.remTerm))
+    : null;
+
+  return (
+    <div className="px-6 py-5">
+      <StepHeader title="Tell us about your car loan" sub="We need these details to roast your rate accurately" />
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Loan Amount" error={errors.loanAmt}>
+          <PrefixInput prefix="$" error={errors.loanAmt}>
+            <Input className={inputCls(errors.loanAmt)} type="number" placeholder="35,000"
+              value={form.loanAmt} onChange={e => set('loanAmt', e.target.value)} />
+          </PrefixInput>
+        </Field>
+        <Field label="Current Rate" error={errors.currentRate}>
+          <SuffixInput suffix="%" error={errors.currentRate}>
+            <Input className={inputCls(errors.currentRate)} type="number" step="0.1" placeholder="9.4"
+              value={form.currentRate} onChange={e => set('currentRate', e.target.value)} />
+          </SuffixInput>
+        </Field>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Remaining Balance" error={errors.remBal}>
+          <PrefixInput prefix="$" error={errors.remBal}>
+            <Input className={inputCls(errors.remBal)} type="number" placeholder="22,000"
+              value={form.remBal} onChange={e => set('remBal', e.target.value)} />
+          </PrefixInput>
+        </Field>
+        <Field label="Remaining Term" error={errors.remTerm}>
+          <SelectInput error={errors.remTerm} value={form.remTerm} onChange={e => set('remTerm', e.target.value)}>
+            <option value="">Select...</option>
+            <option value="0.5">Less than 1 yr</option>
+            <option value="1.5">1–2 years</option>
+            <option value="2.5">2–3 years</option>
+            <option value="3.5">3–4 years</option>
+            <option value="4.5">4–5 years</option>
+            <option value="6">5+ years</option>
+          </SelectInput>
+        </Field>
+      </div>
+
+      {liveSavings !== null && (
+        <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3 mb-1">
+          <span className="text-[13px] text-emerald-700 font-medium">Potential savings vs market</span>
+          <span className="text-lg font-bold text-emerald-600 font-heading">${liveSavings.toLocaleString()}</span>
+        </div>
+      )}
+
+      <FireButton onClick={onNext}>Continue →</FireButton>
+      <Note>🔒 No credit check. No spam. Takes 60 seconds.</Note>
+    </div>
+  );
+}
+
+/* ── STEP 1 ── */
+function Step1({ form, set, errors, onNext, onBack }: StepProps) {
+  return (
+    <div className="px-6 py-5">
+      <StepHeader title="A couple more questions" sub="This makes your report much more accurate" />
+
+      <Field label="Where did you get your loan?" error={errors.loanSource}>
+        <div className="grid grid-cols-2 gap-2">
+          {loanSources.map(s => (
+            <PillButton key={s.id} selected={form.loanSource === s.id} onClick={() => set('loanSource', s.id)}>
+              <span className="text-2xl">{s.icon}</span>
+              <span className="text-[13px] font-semibold text-slate-800 leading-tight">{s.label}</span>
+              <span className="text-[11px] text-gray-400">{s.sub}</span>
+            </PillButton>
+          ))}
+        </div>
+      </Field>
+
+      <Field label="Employment Type" error={errors.employment}>
+        <div className="grid grid-cols-2 gap-2">
+          {employmentTypes.map(e => (
+            <PillButton key={e.id} selected={form.employment === e.id} onClick={() => set('employment', e.id)}>
+              <span className="text-2xl">{e.icon}</span>
+              <span className="text-[13px] font-semibold text-slate-800">{e.label}</span>
+            </PillButton>
+          ))}
+        </div>
+      </Field>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Annual Income (pre-tax)" error={errors.income}>
+          <PrefixInput prefix="$" error={errors.income}>
+            <Input className={inputCls(errors.income)} type="number" placeholder="80,000"
+              value={form.income} onChange={e => set('income', e.target.value)} />
+          </PrefixInput>
+        </Field>
+        <Field label="State" error={errors.state}>
+          <SelectInput error={errors.state} value={form.state} onChange={e => set('state', e.target.value)}>
+            <option value="">Select...</option>
+            {['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'].map(s => (
+              <option key={s}>{s}</option>
+            ))}
+          </SelectInput>
+        </Field>
+      </div>
+
+      <div className="flex gap-2.5 mt-1">
+        <BackButton onClick={onBack}>← Back</BackButton>
+        <FireButton onClick={onNext} flex>Continue →</FireButton>
+      </div>
+      <Note>🔒 Soft enquiry only — no credit score impact</Note>
+    </div>
+  );
+}
+
+/* ── STEP 2 ── */
+interface Step2Props extends Omit<StepProps, 'onNext'> {
+  onSubmit: () => void;
+}
+
+function Step2({ form, set, errors, onSubmit, onBack }: Step2Props) {
+  return (
+    <div className="px-6 py-5">
+      <StepHeader title="Last step — your details" sub="Your report will be ready instantly" />
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="First Name" error={errors.firstName}>
+          <Input className={inputCls(errors.firstName)} type="text" placeholder="James"
+            aria-invalid={!!errors.firstName}
+            value={form.firstName} onChange={e => set('firstName', e.target.value)} />
+        </Field>
+        <Field label="Last Name" error={errors.lastName}>
+          <Input className={inputCls(errors.lastName)} type="text" placeholder="Miller"
+            aria-invalid={!!errors.lastName}
+            value={form.lastName} onChange={e => set('lastName', e.target.value)} />
+        </Field>
+      </div>
+
+      <Field label="Mobile Number" error={errors.phone}>
+        <Input className={inputCls(errors.phone)} type="tel" placeholder="04XX XXX XXX"
+          aria-invalid={!!errors.phone}
+          value={form.phone} onChange={e => set('phone', e.target.value)} />
+      </Field>
+
+      <Field label="Email Address" error={errors.email}>
+        <Input className={inputCls(errors.email)} type="email" placeholder="james@gmail.com"
+          aria-invalid={!!errors.email}
+          value={form.email} onChange={e => set('email', e.target.value)} />
+      </Field>
+
+      <div className="flex gap-2.5 mt-1">
+        <BackButton onClick={onBack}>← Back</BackButton>
+        <FireButton onClick={onSubmit} flex>🔥 Generate My Rate Roast</FireButton>
+      </div>
+      <Note>By submitting you agree to our Privacy Policy. A specialist may reach out with options.</Note>
+    </div>
+  );
+}
+
+/* ── LOADING ── */
+function LoadingScreen() {
+  const [msg, setMsg] = useState(LOADING_MSGS[0]);
+
+  useEffect(() => {
+    let i = 0;
+    const t = setInterval(() => {
+      i = (i + 1) % LOADING_MSGS.length;
+      setMsg(LOADING_MSGS[i]);
+    }, 550);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center justify-center py-14 px-6 text-center">
+      <span className="text-5xl animate-spin inline-block">🔥</span>
+      <p className="mt-5 text-sm text-gray-500 font-medium min-h-[20px]">{msg}</p>
+      <div className="flex items-center gap-1.5 mt-4">
+        {[0, 1, 2].map(i => (
+          <span
+            key={i}
+            className="w-2 h-2 rounded-full bg-[#FF4C0C] inline-block"
+            style={{ animation: `bounce-dot 0.8s ease-in-out ${i * 0.15}s infinite` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── RESULT SCREEN ── */
+interface ResultScreenProps {
+  form: FormState;
+  roast: RoastGrade;
+  savings: number;
+  onReset: () => void;
+}
+
+function ResultScreen({ form, roast, savings, onReset }: ResultScreenProps) {
+  const currentRate  = parseFloat(form.currentRate);
+  const monthlyDiff  = savings > 0 ? Math.round(savings / (parseFloat(form.remTerm) * 12)) : 0;
+  const rateGapRaw   = currentRate - MARKET_RATE;
+  const rateGapLabel = rateGapRaw > 0 ? `+${rateGapRaw.toFixed(2)}%` : `${rateGapRaw.toFixed(2)}%`;
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-gradient-to-br from-slate-50 via-white to-[#fff5f0]">
+      <div className="w-full max-w-[520px] bg-white rounded-3xl overflow-hidden shadow-[0_32px_80px_-8px_rgba(0,0,0,0.10)] ring-1 ring-black/5">
+
+        <div className="h-1 bg-gradient-to-r from-[#FF4C0C] to-[#ff6b35]" />
+
+        {/* Grade */}
+        <div className="text-center px-6 pt-8 pb-2">
+          <p className="text-[11px] font-bold tracking-widest uppercase text-gray-400 mb-5">Your Rate Roast Result</p>
+          <div className={cn(
+            'w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center ring-4',
+            roast.bg, roast.ring,
+          )}>
+            <span className={cn('font-heading text-5xl font-bold', roast.color)}>{roast.grade}</span>
+          </div>
+          <h2 className={cn('font-heading text-2xl font-bold mb-1', roast.color)}>{roast.label}</h2>
+          <p className="text-sm text-gray-500 max-w-xs mx-auto leading-relaxed">{roast.msg}</p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-3 px-6 pt-4">
+          {[
+            { label: 'Your Rate',   value: `${currentRate}%`,  cls: roast.color },
+            { label: 'Market Rate', value: `${MARKET_RATE}%`,  cls: 'text-emerald-600' },
+            { label: 'Rate Gap',    value: rateGapLabel,         cls: rateGapRaw > 0 ? 'text-[#FF4C0C]' : 'text-emerald-600' },
+          ].map(s => (
+            <div key={s.label} className="bg-gray-50 rounded-2xl px-3 py-4 text-center">
+              <p className="text-[11px] text-gray-400 mb-1.5 uppercase tracking-wide">{s.label}</p>
+              <p className={cn('font-heading text-xl font-bold', s.cls)}>{s.value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Savings */}
+        {savings > 0 && (
+          <div className="mx-6 mt-4 bg-emerald-50 border border-emerald-100 rounded-2xl px-5 py-5 text-center">
+            <p className="text-xs font-semibold text-emerald-700 mb-1">Potential total savings if you refinance today</p>
+            <p className="font-heading text-4xl font-bold text-emerald-600 mb-1">${savings.toLocaleString()}</p>
+            <p className="text-xs text-gray-500">That&apos;s ~${monthlyDiff}/month back in your pocket</p>
+          </div>
+        )}
+
+        {/* CTA */}
+        <div className="px-6 py-6">
+          <FireButton onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            🔥 Connect Me With a Specialist
+          </FireButton>
+          <button
+            type="button"
+            onClick={onReset}
+            className="mt-2.5 w-full rounded-xl border border-gray-200 py-3.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
+          >
+            ← Start Over
+          </button>
+          <Note>Free service. A broker specialist may contact you with options. No obligation.</Note>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── SUB-COMPONENTS ── */
+function StepHeader({ title, sub }: { title: string; sub: string }) {
+  return (
+    <div className="mb-5">
+      <h2 className="font-heading text-xl font-bold text-slate-900 mb-1">{title}</h2>
+      <p className="text-sm text-gray-400">{sub}</p>
+    </div>
+  );
+}
+
+interface FieldProps {
+  label: string;
+  children: React.ReactNode;
+  error?: string;
+}
+
+function Field({ label, children, error }: FieldProps) {
+  return (
+    <div className="mb-3.5">
+      <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">{label}</label>
+      {children}
+      {error && <p className="text-[11px] text-[#FF4C0C] mt-1">{error}</p>}
+    </div>
+  );
+}
+
+function PrefixInput({ prefix, children, error }: { prefix: string; children: React.ReactNode; error?: string }) {
+  return (
+    <div className="relative">
+      <span className={cn('absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold pointer-events-none select-none', error ? 'text-[#FF4C0C]' : 'text-gray-400')}>
+        {prefix}
+      </span>
+      <div className="[&_input]:pl-7">{children}</div>
+    </div>
+  );
+}
+
+function SuffixInput({ suffix, children, error }: { suffix: string; children: React.ReactNode; error?: string }) {
+  return (
+    <div className="relative">
+      <span className={cn('absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold pointer-events-none select-none', error ? 'text-[#FF4C0C]' : 'text-gray-400')}>
+        {suffix}
+      </span>
+      <div className="[&_input]:pr-7">{children}</div>
+    </div>
+  );
+}
+
+interface SelectInputProps {
+  error?: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  children: React.ReactNode;
+}
+
+function SelectInput({ error, value, onChange, children }: SelectInputProps) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={onChange}
+        className={cn(
+          'h-9 w-full appearance-none rounded-lg border bg-transparent pl-3 pr-8 text-sm text-foreground',
+          'transition-colors outline-none cursor-pointer',
+          'focus:border-ring focus:ring-2 focus:ring-ring/30',
+          error ? 'border-destructive' : 'border-input',
+        )}
+      >
+        {children}
+      </select>
+      <ChevronDownIcon className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+    </div>
+  );
+}
+
+function PillButton({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-center cursor-pointer transition-all duration-150',
+        selected
+          ? 'border-[#FF4C0C] bg-[#FFF1EC] shadow-sm'
+          : 'border-gray-200 bg-white hover:border-[#FF4C0C] hover:bg-[#FFF8F5]',
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function FireButton({ onClick, children, flex }: { onClick: () => void; children: React.ReactNode; flex?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex items-center justify-center rounded-xl bg-[#FF4C0C] text-white',
+        'font-heading font-bold text-[15px] py-4 mt-1.5',
+        'transition-all hover:bg-[#d63d08] hover:-translate-y-0.5',
+        'hover:shadow-[0_8px_24px_-4px_rgba(255,76,12,0.45)]',
+        flex ? 'flex-1' : 'w-full',
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function BackButton({ onClick, children }: { onClick?: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-xl border border-gray-200 px-5 py-4 mt-1.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
+    >
+      {children}
+    </button>
+  );
+}
+
+function Note({ children }: { children: React.ReactNode }) {
+  return <p className="text-center text-[11px] text-gray-400 mt-2.5 leading-relaxed">{children}</p>;
+}
+
+/* ── STYLE UTILS ── */
+function inputCls(error?: string) {
+  return cn('h-9 text-sm text-slate-900', error && 'border-destructive');
+}

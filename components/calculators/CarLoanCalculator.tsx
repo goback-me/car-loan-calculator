@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 /* ── DATA ── */
-const STEPS = ['Loan', 'Profile', 'Contact'] as const;
+const STEPS = ['Loan', 'Source', 'Employment', 'Profile', 'Contact'] as const;
 
 const loanSources = [
   { id: 'bank',    icon: '🏦', label: 'Bank / Credit Union', sub: 'ANZ, CBA, NAB' },
@@ -85,13 +85,13 @@ interface StepProps {
 
 /* ── MAIN CALCULATOR ── */
 export default function CarLoanCalculator() {
-  const [step, setStep]             = useState(0);
-  const [animDir, setAnimDir]       = useState<'forward' | 'back'>('forward');
+  const [step, setStep]               = useState(0);
+  const [animDir, setAnimDir]         = useState<'forward' | 'back'>('forward');
   const [isAnimating, setIsAnimating] = useState(false);
-  const [showResult, setShowResult] = useState(false);
-  const [isLoading, setIsLoading]   = useState(false);
-  const [form, setForm]             = useState<FormState>(EMPTY_FORM);
-  const [errors, setErrors]         = useState<Errors>({});
+  const [showResult, setShowResult]   = useState(false);
+  const [isLoading, setIsLoading]     = useState(false);
+  const [form, setForm]               = useState<FormState>(EMPTY_FORM);
+  const [errors, setErrors]           = useState<Errors>({});
 
   const set = (key: keyof FormState, val: string) => setForm(f => ({ ...f, [key]: val }));
 
@@ -125,8 +125,20 @@ export default function CarLoanCalculator() {
 
   function validateStep1(): boolean {
     const e: Errors = {};
-    if (!form.loanSource) e.loanSource = 'Required';
-    if (!form.employment) e.employment = 'Required';
+    if (!form.loanSource) e.loanSource = 'Please select where you got your loan';
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  function validateStep2(): boolean {
+    const e: Errors = {};
+    if (!form.employment) e.employment = 'Please select your employment type';
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  function validateStep3(): boolean {
+    const e: Errors = {};
     if (!form.income || isNaN(Number(form.income))) e.income = 'Required';
     if (!form.state)  e.state = 'Required';
     setErrors(e);
@@ -135,6 +147,8 @@ export default function CarLoanCalculator() {
 
   function handleStep0() { if (validateStep0()) goNext(); }
   function handleStep1() { if (validateStep1()) goNext(); }
+  function handleStep2() { if (validateStep2()) goNext(); }
+  function handleStep3() { if (validateStep3()) goNext(); }
 
   function handleSubmit() {
     const e: Errors = {};
@@ -171,21 +185,21 @@ export default function CarLoanCalculator() {
           <span className="inline-flex items-center gap-1.5 bg-[#FF4C0C] text-white rounded-full px-3.5 py-1 text-[11px] font-bold tracking-widest uppercase">
             🔥 Free Rate Roast
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {STEPS.map((s, i) => (
-              <div key={s} className="flex items-center gap-2">
+              <div key={s} className="flex items-center gap-1.5">
                 <div
                   className={cn(
-                    'w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-300',
-                    i < step  && 'bg-[#FF4C0C] text-white scale-100',
+                    'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300',
+                    i < step   && 'bg-[#FF4C0C] text-white',
                     i === step && 'bg-[#FF4C0C] text-white scale-110 shadow-md shadow-black/20',
-                    i > step  && 'bg-gray-100 text-gray-400',
+                    i > step   && 'bg-gray-100 text-gray-400',
                   )}
                 >
                   {i < step ? '✓' : i + 1}
                 </div>
                 {i < STEPS.length - 1 && (
-                  <div className={cn('w-5 h-0.5 rounded-full transition-colors duration-300', i < step ? 'bg-[#FF4C0C]' : 'bg-gray-200')} />
+                  <div className={cn('w-4 h-0.5 rounded-full transition-colors duration-300', i < step ? 'bg-[#FF4C0C]' : 'bg-gray-200')} />
                 )}
               </div>
             ))}
@@ -223,9 +237,11 @@ export default function CarLoanCalculator() {
           >
             {step === 0 && <Step0 form={form} set={set} errors={errors} onNext={handleStep0} />}
             {step === 1 && <Step1 form={form} set={set} errors={errors} onNext={handleStep1} onBack={goBack} />}
-            {step === 2 && (isLoading
+            {step === 2 && <Step2 form={form} set={set} errors={errors} onNext={handleStep2} onBack={goBack} />}
+            {step === 3 && <Step3 form={form} set={set} errors={errors} onNext={handleStep3} onBack={goBack} />}
+            {step === 4 && (isLoading
               ? <LoadingScreen />
-              : <Step2 form={form} set={set} errors={errors} onSubmit={handleSubmit} onBack={goBack} />
+              : <Step4 form={form} set={set} errors={errors} onSubmit={handleSubmit} onBack={goBack} />
             )}
           </div>
         </div>
@@ -234,7 +250,7 @@ export default function CarLoanCalculator() {
   );
 }
 
-/* ── STEP 0 ── */
+/* ── STEP 0 — Loan details ── */
 function Step0({ form, set, errors, onNext }: StepProps) {
   const liveSavings = form.remBal && form.currentRate && form.remTerm
     ? calcSavings(parseFloat(form.remBal), parseFloat(form.currentRate), MARKET_RATE, parseFloat(form.remTerm))
@@ -292,17 +308,17 @@ function Step0({ form, set, errors, onNext }: StepProps) {
   );
 }
 
-/* ── STEP 1 ── */
+/* ── STEP 1 — Where did you get your loan? ── */
 function Step1({ form, set, errors, onNext, onBack }: StepProps) {
   return (
     <div className="px-6 py-5">
-      <StepHeader title="A couple more questions" sub="This makes your report much more accurate" />
+      <StepHeader title="Where did you get your loan?" sub="This makes your report much more accurate" />
 
-      <Field label="Where did you get your loan?" error={errors.loanSource}>
-        <div className="grid grid-cols-2 gap-2">
+      <Field label="" error={errors.loanSource}>
+        <div className="grid grid-cols-2 gap-3">
           {loanSources.map(s => (
             <PillButton key={s.id} selected={form.loanSource === s.id} onClick={() => set('loanSource', s.id)}>
-              <span className="text-2xl">{s.icon}</span>
+              <span className="text-3xl mb-0.5">{s.icon}</span>
               <span className="text-[13px] font-semibold text-slate-800 leading-tight">{s.label}</span>
               <span className="text-[11px] text-gray-400">{s.sub}</span>
             </PillButton>
@@ -310,16 +326,46 @@ function Step1({ form, set, errors, onNext, onBack }: StepProps) {
         </div>
       </Field>
 
-      <Field label="Employment Type" error={errors.employment}>
-        <div className="grid grid-cols-2 gap-2">
+      <div className="flex gap-2.5 mt-2">
+        <BackButton onClick={onBack}>← Back</BackButton>
+        <FireButton onClick={onNext} flex>Continue →</FireButton>
+      </div>
+      <Note>🔒 Soft enquiry only — no credit score impact</Note>
+    </div>
+  );
+}
+
+/* ── STEP 2 — Employment type ── */
+function Step2({ form, set, errors, onNext, onBack }: StepProps) {
+  return (
+    <div className="px-6 py-5">
+      <StepHeader title="What's your employment type?" sub="Lenders assess risk differently based on how you work" />
+
+      <Field label="" error={errors.employment}>
+        <div className="grid grid-cols-2 gap-3">
           {employmentTypes.map(e => (
             <PillButton key={e.id} selected={form.employment === e.id} onClick={() => set('employment', e.id)}>
-              <span className="text-2xl">{e.icon}</span>
+              <span className="text-3xl mb-0.5">{e.icon}</span>
               <span className="text-[13px] font-semibold text-slate-800">{e.label}</span>
             </PillButton>
           ))}
         </div>
       </Field>
+
+      <div className="flex gap-2.5 mt-2">
+        <BackButton onClick={onBack}>← Back</BackButton>
+        <FireButton onClick={onNext} flex>Continue →</FireButton>
+      </div>
+      <Note>🔒 Soft enquiry only — no credit score impact</Note>
+    </div>
+  );
+}
+
+/* ── STEP 3 — Income & State ── */
+function Step3({ form, set, errors, onNext, onBack }: StepProps) {
+  return (
+    <div className="px-6 py-5">
+      <StepHeader title="Almost there!" sub="Just a couple more details for your personalised report" />
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Annual Income (pre-tax)" error={errors.income}>
@@ -342,17 +388,17 @@ function Step1({ form, set, errors, onNext, onBack }: StepProps) {
         <BackButton onClick={onBack}>← Back</BackButton>
         <FireButton onClick={onNext} flex>Continue →</FireButton>
       </div>
-      <Note>🔒 Soft enquiry only — no credit score impact</Note>
+      <Note>🔒 Your information is kept private and secure</Note>
     </div>
   );
 }
 
-/* ── STEP 2 ── */
-interface Step2Props extends Omit<StepProps, 'onNext'> {
+/* ── STEP 4 — Contact details ── */
+interface Step4Props extends Omit<StepProps, 'onNext'> {
   onSubmit: () => void;
 }
 
-function Step2({ form, set, errors, onSubmit, onBack }: Step2Props) {
+function Step4({ form, set, errors, onSubmit, onBack }: Step4Props) {
   return (
     <div className="px-6 py-5">
       <StepHeader title="Last step — your details" sub="Your report will be ready instantly" />
@@ -515,7 +561,7 @@ interface FieldProps {
 function Field({ label, children, error }: FieldProps) {
   return (
     <div className="mb-3.5">
-      <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">{label}</label>
+      {label && <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">{label}</label>}
       {children}
       {error && <p className="text-[11px] text-[#FF4C0C] mt-1">{error}</p>}
     </div>
@@ -577,7 +623,7 @@ function PillButton({ selected, onClick, children }: { selected: boolean; onClic
       type="button"
       onClick={onClick}
       className={cn(
-        'flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-center cursor-pointer transition-all duration-150',
+        'flex flex-col items-center gap-1 rounded-xl border px-2 py-4 text-center cursor-pointer transition-all duration-150',
         selected
           ? 'border-[#FF4C0C] bg-[#FFF1EC] shadow-sm'
           : 'border-gray-200 bg-white hover:border-[#FF4C0C] hover:bg-[#FFF8F5]',

@@ -174,32 +174,43 @@ export default function CarLoanCalculator() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-gradient-to-br from-slate-50 via-white to-[#fff5f0]">
-      <div className="w-full max-w-[490px] bg-white rounded-3xl overflow-hidden shadow-[0_32px_80px_-8px_rgba(0,0,0,0.10),0_8px_32px_-8px_rgba(255,76,12,0.07)] ring-1 ring-black/5">
+    <div className="min-h-screen flex items-center justify-center px-3 sm:px-4 py-6 sm:py-10 bg-gradient-to-br from-slate-50 via-white to-[#fff5f0]">
+      <div className="w-full max-w-[490px] bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_32px_80px_-8px_rgba(0,0,0,0.10),0_8px_32px_-8px_rgba(255,76,12,0.07)] ring-1 ring-black/5">
 
         {/* Top accent */}
         <div className="h-1 bg-gradient-to-r from-[#FF4C0C] to-[#ff6b35]" />
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5">
-          <span className="inline-flex items-center gap-1.5 bg-[#FF4C0C] text-white rounded-full px-3.5 py-1 text-[11px] font-bold tracking-widest uppercase">
+        <div className="flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-5">
+          <span className="inline-flex items-center gap-1 sm:gap-1.5 bg-[#FF4C0C] text-white rounded-full px-2.5 sm:px-3.5 py-1 text-[10px] sm:text-[11px] font-bold tracking-widest uppercase">
             🔥 Free Rate Roast
           </span>
-          <div className="flex items-center gap-1.5">
+
+          {/* Step indicator — dots on xs, numbered circles on sm+ */}
+          <div className="flex items-center gap-1 sm:gap-1.5">
             {STEPS.map((s, i) => (
-              <div key={s} className="flex items-center gap-1.5">
-                <div
-                  className={cn(
-                    'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300',
-                    i < step   && 'bg-[#FF4C0C] text-white',
-                    i === step && 'bg-[#FF4C0C] text-white scale-110 shadow-md shadow-black/20',
-                    i > step   && 'bg-gray-100 text-gray-400',
-                  )}
-                >
+              <div key={s} className="flex items-center gap-1 sm:gap-1.5">
+                {/* Mobile: small dot */}
+                <div className={cn(
+                  'sm:hidden w-2 h-2 rounded-full transition-all duration-300',
+                  i < step   && 'bg-[#FF4C0C]',
+                  i === step && 'bg-[#FF4C0C] scale-125',
+                  i > step   && 'bg-gray-200',
+                )} />
+                {/* sm+: numbered circle */}
+                <div className={cn(
+                  'hidden sm:flex w-6 h-6 rounded-full items-center justify-center text-[10px] font-bold transition-all duration-300',
+                  i < step   && 'bg-[#FF4C0C] text-white',
+                  i === step && 'bg-[#FF4C0C] text-white scale-110 shadow-md shadow-black/20',
+                  i > step   && 'bg-gray-100 text-gray-400',
+                )}>
                   {i < step ? '✓' : i + 1}
                 </div>
                 {i < STEPS.length - 1 && (
-                  <div className={cn('w-4 h-0.5 rounded-full transition-colors duration-300', i < step ? 'bg-[#FF4C0C]' : 'bg-gray-200')} />
+                  <>
+                    <div className={cn('sm:hidden w-2 h-0.5 rounded-full transition-colors duration-300', i < step ? 'bg-[#FF4C0C]' : 'bg-gray-200')} />
+                    <div className={cn('hidden sm:block w-4 h-0.5 rounded-full transition-colors duration-300', i < step ? 'bg-[#FF4C0C]' : 'bg-gray-200')} />
+                  </>
                 )}
               </div>
             ))}
@@ -207,7 +218,7 @@ export default function CarLoanCalculator() {
         </div>
 
         {/* Progress bar */}
-        <div className="mx-6 mt-4 h-1 bg-gray-100 rounded-full overflow-hidden">
+        <div className="mx-4 sm:mx-6 mt-3 sm:mt-4 h-1 bg-gray-100 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-[#FF4C0C] to-[#ff6b35] rounded-full transition-[width] duration-500 ease-out"
             style={{ width: `${progress}%` }}
@@ -216,9 +227,9 @@ export default function CarLoanCalculator() {
 
         {/* Rate preview chip */}
         {form.currentRate && roast && (
-          <div className="mx-6 mt-3 flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
+          <div className="mx-4 sm:mx-6 mt-3 flex items-center justify-between bg-gray-50 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5">
             <span className="text-xs text-gray-400 font-medium">Your rate:</span>
-            <span className={cn('text-sm font-bold', roast.color)}>
+            <span className={cn('text-xs sm:text-sm font-bold', roast.color)}>
               {form.currentRate}% — {roast.label}
             </span>
           </div>
@@ -257,10 +268,10 @@ function Step0({ form, set, errors, onNext }: StepProps) {
     : null;
 
   return (
-    <div className="px-6 py-5">
+    <div className="px-4 sm:px-6 py-4 sm:py-5">
       <StepHeader title="Tell us about your car loan" sub="We need these details to roast your rate accurately" />
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
         <Field label="Loan Amount" error={errors.loanAmt}>
           <PrefixInput prefix="$" error={errors.loanAmt}>
             <Input className={inputCls(errors.loanAmt)} type="number" placeholder="35,000"
@@ -275,7 +286,7 @@ function Step0({ form, set, errors, onNext }: StepProps) {
         </Field>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
         <Field label="Remaining Balance" error={errors.remBal}>
           <PrefixInput prefix="$" error={errors.remBal}>
             <Input className={inputCls(errors.remBal)} type="number" placeholder="22,000"
@@ -296,9 +307,9 @@ function Step0({ form, set, errors, onNext }: StepProps) {
       </div>
 
       {liveSavings !== null && (
-        <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3 mb-1">
-          <span className="text-[13px] text-emerald-700 font-medium">Potential savings vs market</span>
-          <span className="text-lg font-bold text-emerald-600 font-heading">${liveSavings.toLocaleString()}</span>
+        <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 mb-1">
+          <span className="text-[12px] sm:text-[13px] text-emerald-700 font-medium">Potential savings vs market</span>
+          <span className="text-base sm:text-lg font-bold text-emerald-600 font-heading">${liveSavings.toLocaleString()}</span>
         </div>
       )}
 
@@ -311,22 +322,22 @@ function Step0({ form, set, errors, onNext }: StepProps) {
 /* ── STEP 1 — Where did you get your loan? ── */
 function Step1({ form, set, errors, onNext, onBack }: StepProps) {
   return (
-    <div className="px-6 py-5">
+    <div className="px-4 sm:px-6 py-4 sm:py-5">
       <StepHeader title="Where did you get your loan?" sub="This makes your report much more accurate" />
 
       <Field label="" error={errors.loanSource}>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {loanSources.map(s => (
             <PillButton key={s.id} selected={form.loanSource === s.id} onClick={() => set('loanSource', s.id)}>
-              <span className="text-3xl mb-0.5">{s.icon}</span>
-              <span className="text-[13px] font-semibold text-slate-800 leading-tight">{s.label}</span>
+              <span className="text-2xl sm:text-3xl mb-0.5">{s.icon}</span>
+              <span className="text-[12px] sm:text-[13px] font-semibold text-slate-800 leading-tight">{s.label}</span>
               <span className="text-[11px] text-gray-400">{s.sub}</span>
             </PillButton>
           ))}
         </div>
       </Field>
 
-      <div className="flex gap-2.5 mt-2">
+      <div className="flex gap-2 sm:gap-2.5 mt-2">
         <BackButton onClick={onBack}>← Back</BackButton>
         <FireButton onClick={onNext} flex>Continue →</FireButton>
       </div>
@@ -338,21 +349,21 @@ function Step1({ form, set, errors, onNext, onBack }: StepProps) {
 /* ── STEP 2 — Employment type ── */
 function Step2({ form, set, errors, onNext, onBack }: StepProps) {
   return (
-    <div className="px-6 py-5">
+    <div className="px-4 sm:px-6 py-4 sm:py-5">
       <StepHeader title="What's your employment type?" sub="Lenders assess risk differently based on how you work" />
 
       <Field label="" error={errors.employment}>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {employmentTypes.map(e => (
             <PillButton key={e.id} selected={form.employment === e.id} onClick={() => set('employment', e.id)}>
-              <span className="text-3xl mb-0.5">{e.icon}</span>
-              <span className="text-[13px] font-semibold text-slate-800">{e.label}</span>
+              <span className="text-2xl sm:text-3xl mb-0.5">{e.icon}</span>
+              <span className="text-[12px] sm:text-[13px] font-semibold text-slate-800">{e.label}</span>
             </PillButton>
           ))}
         </div>
       </Field>
 
-      <div className="flex gap-2.5 mt-2">
+      <div className="flex gap-2 sm:gap-2.5 mt-2">
         <BackButton onClick={onBack}>← Back</BackButton>
         <FireButton onClick={onNext} flex>Continue →</FireButton>
       </div>
@@ -364,10 +375,10 @@ function Step2({ form, set, errors, onNext, onBack }: StepProps) {
 /* ── STEP 3 — Income & State ── */
 function Step3({ form, set, errors, onNext, onBack }: StepProps) {
   return (
-    <div className="px-6 py-5">
+    <div className="px-4 sm:px-6 py-4 sm:py-5">
       <StepHeader title="Almost there!" sub="Just a couple more details for your personalised report" />
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-2 sm:gap-3">
         <Field label="Annual Income (pre-tax)" error={errors.income}>
           <PrefixInput prefix="$" error={errors.income}>
             <Input className={inputCls(errors.income)} type="number" placeholder="80,000"
@@ -384,7 +395,7 @@ function Step3({ form, set, errors, onNext, onBack }: StepProps) {
         </Field>
       </div>
 
-      <div className="flex gap-2.5 mt-1">
+      <div className="flex gap-2 sm:gap-2.5 mt-1">
         <BackButton onClick={onBack}>← Back</BackButton>
         <FireButton onClick={onNext} flex>Continue →</FireButton>
       </div>
@@ -400,10 +411,10 @@ interface Step4Props extends Omit<StepProps, 'onNext'> {
 
 function Step4({ form, set, errors, onSubmit, onBack }: Step4Props) {
   return (
-    <div className="px-6 py-5">
+    <div className="px-4 sm:px-6 py-4 sm:py-5">
       <StepHeader title="Last step — your details" sub="Your report will be ready instantly" />
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-2 sm:gap-3">
         <Field label="First Name" error={errors.firstName}>
           <Input className={inputCls(errors.firstName)} type="text" placeholder="James"
             aria-invalid={!!errors.firstName}
@@ -428,9 +439,9 @@ function Step4({ form, set, errors, onSubmit, onBack }: Step4Props) {
           value={form.email} onChange={e => set('email', e.target.value)} />
       </Field>
 
-      <div className="flex gap-2.5 mt-1">
+      <div className="flex gap-2 sm:gap-2.5 mt-1">
         <BackButton onClick={onBack}>← Back</BackButton>
-        <FireButton onClick={onSubmit} flex>🔥 Generate My Rate Roast</FireButton>
+        <FireButton onClick={onSubmit} flex>🔥 Get My Rate Roast</FireButton>
       </div>
       <Note>By submitting you agree to our Privacy Policy. A specialist may reach out with options.</Note>
     </div>
@@ -451,7 +462,7 @@ function LoadingScreen() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center py-14 px-6 text-center">
+    <div className="flex flex-col items-center justify-center py-12 sm:py-14 px-4 sm:px-6 text-center">
       <span className="text-5xl animate-spin inline-block">🔥</span>
       <p className="mt-5 text-sm text-gray-500 font-medium min-h-[20px]">{msg}</p>
       <div className="flex items-center gap-1.5 mt-4">
@@ -482,56 +493,56 @@ function ResultScreen({ form, roast, savings, onReset }: ResultScreenProps) {
   const rateGapLabel = rateGapRaw > 0 ? `+${rateGapRaw.toFixed(2)}%` : `${rateGapRaw.toFixed(2)}%`;
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-gradient-to-br from-slate-50 via-white to-[#fff5f0]">
-      <div className="w-full max-w-[520px] bg-white rounded-3xl overflow-hidden shadow-[0_32px_80px_-8px_rgba(0,0,0,0.10)] ring-1 ring-black/5">
+    <div className="min-h-screen flex items-center justify-center px-3 sm:px-4 py-6 sm:py-10 bg-gradient-to-br from-slate-50 via-white to-[#fff5f0]">
+      <div className="w-full max-w-[520px] bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_32px_80px_-8px_rgba(0,0,0,0.10)] ring-1 ring-black/5">
 
         <div className="h-1 bg-gradient-to-r from-[#FF4C0C] to-[#ff6b35]" />
 
         {/* Grade */}
-        <div className="text-center px-6 pt-8 pb-2">
-          <p className="text-[11px] font-bold tracking-widest uppercase text-gray-400 mb-5">Your Rate Roast Result</p>
+        <div className="text-center px-4 sm:px-6 pt-6 sm:pt-8 pb-2">
+          <p className="text-[11px] font-bold tracking-widest uppercase text-gray-400 mb-4 sm:mb-5">Your Rate Roast Result</p>
           <div className={cn(
-            'w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center ring-4',
+            'w-20 h-20 sm:w-24 sm:h-24 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center ring-4',
             roast.bg, roast.ring,
           )}>
-            <span className={cn('font-heading text-5xl font-bold', roast.color)}>{roast.grade}</span>
+            <span className={cn('font-heading text-4xl sm:text-5xl font-bold', roast.color)}>{roast.grade}</span>
           </div>
-          <h2 className={cn('font-heading text-2xl font-bold mb-1', roast.color)}>{roast.label}</h2>
+          <h2 className={cn('font-heading text-xl sm:text-2xl font-bold mb-1', roast.color)}>{roast.label}</h2>
           <p className="text-sm text-gray-500 max-w-xs mx-auto leading-relaxed">{roast.msg}</p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 px-6 pt-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 px-4 sm:px-6 pt-4">
           {[
             { label: 'Your Rate',   value: `${currentRate}%`,  cls: roast.color },
             { label: 'Market Rate', value: `${MARKET_RATE}%`,  cls: 'text-emerald-600' },
             { label: 'Rate Gap',    value: rateGapLabel,         cls: rateGapRaw > 0 ? 'text-[#FF4C0C]' : 'text-emerald-600' },
           ].map(s => (
-            <div key={s.label} className="bg-gray-50 rounded-2xl px-3 py-4 text-center">
-              <p className="text-[11px] text-gray-400 mb-1.5 uppercase tracking-wide">{s.label}</p>
-              <p className={cn('font-heading text-xl font-bold', s.cls)}>{s.value}</p>
+            <div key={s.label} className="bg-gray-50 rounded-xl sm:rounded-2xl px-2 sm:px-3 py-3 sm:py-4 text-center">
+              <p className="text-[10px] sm:text-[11px] text-gray-400 mb-1 sm:mb-1.5 uppercase tracking-wide">{s.label}</p>
+              <p className={cn('font-heading text-lg sm:text-xl font-bold', s.cls)}>{s.value}</p>
             </div>
           ))}
         </div>
 
         {/* Savings */}
         {savings > 0 && (
-          <div className="mx-6 mt-4 bg-emerald-50 border border-emerald-100 rounded-2xl px-5 py-5 text-center">
+          <div className="mx-4 sm:mx-6 mt-3 sm:mt-4 bg-emerald-50 border border-emerald-100 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-4 sm:py-5 text-center">
             <p className="text-xs font-semibold text-emerald-700 mb-1">Potential total savings if you refinance today</p>
-            <p className="font-heading text-4xl font-bold text-emerald-600 mb-1">${savings.toLocaleString()}</p>
+            <p className="font-heading text-3xl sm:text-4xl font-bold text-emerald-600 mb-1">${savings.toLocaleString()}</p>
             <p className="text-xs text-gray-500">That&apos;s ~${monthlyDiff}/month back in your pocket</p>
           </div>
         )}
 
         {/* CTA */}
-        <div className="px-6 py-6">
+        <div className="px-4 sm:px-6 py-5 sm:py-6">
           <FireButton onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             🔥 Connect Me With a Specialist
           </FireButton>
           <button
             type="button"
             onClick={onReset}
-            className="mt-2.5 w-full rounded-xl border border-gray-200 py-3.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
+            className="mt-2.5 w-full rounded-xl border border-gray-200 py-3 sm:py-3.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
           >
             ← Start Over
           </button>
@@ -545,9 +556,9 @@ function ResultScreen({ form, roast, savings, onReset }: ResultScreenProps) {
 /* ── SUB-COMPONENTS ── */
 function StepHeader({ title, sub }: { title: string; sub: string }) {
   return (
-    <div className="mb-5">
-      <h2 className="font-heading text-xl font-bold text-slate-900 mb-1">{title}</h2>
-      <p className="text-sm text-gray-400">{sub}</p>
+    <div className="mb-4 sm:mb-5">
+      <h2 className="font-heading text-lg sm:text-xl font-bold text-slate-900 mb-1">{title}</h2>
+      <p className="text-xs sm:text-sm text-gray-400">{sub}</p>
     </div>
   );
 }
@@ -560,8 +571,8 @@ interface FieldProps {
 
 function Field({ label, children, error }: FieldProps) {
   return (
-    <div className="mb-3.5">
-      {label && <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">{label}</label>}
+    <div className="mb-3">
+      {label && <label className="block text-[10px] sm:text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">{label}</label>}
       {children}
       {error && <p className="text-[11px] text-[#FF4C0C] mt-1">{error}</p>}
     </div>
@@ -623,7 +634,7 @@ function PillButton({ selected, onClick, children }: { selected: boolean; onClic
       type="button"
       onClick={onClick}
       className={cn(
-        'flex flex-col items-center gap-1 rounded-xl border px-2 py-4 text-center cursor-pointer transition-all duration-150',
+        'flex flex-col items-center gap-1 rounded-xl border px-2 py-3 sm:py-4 text-center cursor-pointer transition-all duration-150',
         selected
           ? 'border-[#FF4C0C] bg-[#FFF1EC] shadow-sm'
           : 'border-gray-200 bg-white hover:border-[#FF4C0C] hover:bg-[#FFF8F5]',
@@ -641,8 +652,8 @@ function FireButton({ onClick, children, flex }: { onClick: () => void; children
       onClick={onClick}
       className={cn(
         'flex items-center justify-center rounded-xl bg-[#FF4C0C] text-white',
-        'font-heading font-bold text-[15px] py-4 mt-1.5',
-        'transition-all hover:bg-[#d63d08] hover:-translate-y-0.5',
+        'font-heading font-bold text-[14px] sm:text-[15px] py-3.5 sm:py-4 mt-1.5',
+        'transition-all hover:bg-[#d63d08] active:scale-[0.98]',
         'hover:shadow-[0_8px_24px_-4px_rgba(255,76,12,0.45)]',
         flex ? 'flex-1' : 'w-full',
       )}
@@ -657,7 +668,7 @@ function BackButton({ onClick, children }: { onClick?: () => void; children: Rea
     <button
       type="button"
       onClick={onClick}
-      className="rounded-xl border border-gray-200 px-5 py-4 mt-1.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
+      className="rounded-xl border border-gray-200 px-4 sm:px-5 py-3.5 sm:py-4 mt-1.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 active:scale-[0.98] transition-colors"
     >
       {children}
     </button>

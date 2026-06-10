@@ -162,7 +162,7 @@ export default function CarLoanCalculator() {
   const progress = ((step + 1) / STEPS.length) * 100;
 
   return (
-    <div className="flex items-center justify-center px-3 sm:px-4 py-6 sm:py-10 bg-gradient-to-br from-slate-50 via-white to-[#fff5f0]">
+    <div className="min-h-screen flex items-center justify-center px-3 sm:px-4 py-6 sm:py-10 bg-gradient-to-br from-slate-50 via-white to-[#fff5f0]">
       <div className="w-full max-w-[490px] bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_32px_80px_-8px_rgba(0,0,0,0.10),0_8px_32px_-8px_rgba(255,76,12,0.07)] ring-1 ring-black/5">
 
         {/* Top accent */}

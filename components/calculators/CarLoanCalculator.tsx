@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronDownIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { MARKET_RATE, getRoastGrade, calcSavings } from '@/lib/calculations';
 
 /* ── DATA ── */
 const STEPS = ['Loan', 'Source', 'Employment', 'Profile', 'Contact'] as const;
@@ -21,8 +22,6 @@ const employmentTypes = [
   { id: 'casual',       icon: '📋', label: 'Casual' },
 ];
 
-const MARKET_RATE = 6.49;
-
 const LOADING_MSGS = [
   'Checking current market rates...',
   'Analysing your loan profile...',
@@ -31,15 +30,6 @@ const LOADING_MSGS = [
 ];
 
 /* ── TYPES ── */
-interface RoastGrade {
-  grade: string;
-  label: string;
-  color: string;
-  bg: string;
-  ring: string;
-  msg: string;
-}
-
 interface FormState {
   loanAmt: string; currentRate: string; remBal: string; remTerm: string;
   loanSource: string; employment: string; income: string; state: string;
@@ -53,26 +43,6 @@ const EMPTY_FORM: FormState = {
   loanSource: '', employment: '', income: '', state: '',
   firstName: '', lastName: '', phone: '', email: '',
 };
-
-/* ── HELPERS ── */
-function getRoastGrade(rate: number): RoastGrade {
-  if (rate <= 6.5)  return { grade: 'A', label: 'Excellent',    color: 'text-emerald-600', bg: 'bg-emerald-50',  ring: 'ring-emerald-400', msg: "You're already getting a competitive rate. Well done." };
-  if (rate <= 8.0)  return { grade: 'B', label: 'Average',      color: 'text-amber-500',   bg: 'bg-amber-50',    ring: 'ring-amber-400',   msg: "Not terrible — but there may be room to improve." };
-  if (rate <= 10.0) return { grade: 'C', label: 'Above Market', color: 'text-[#FF4C0C]', bg: 'bg-[#FFF1EC]', ring: 'ring-[#FF4C0C]/60', msg: "You're paying more than you should. Time to check your options." };
-  return             { grade: 'D', label: 'Ouch 🔥',            color: 'text-[#FF4C0C]', bg: 'bg-[#FFE0CC]', ring: 'ring-[#FF4C0C]',    msg: "Your rate is significantly above market. You could save thousands." };
-}
-
-function calcSavings(balance: number, currentRate: number, marketRate: number, termYears: number): number {
-  const monthly = (r: number, p: number, t: number): number => {
-    const mr = r / 100 / 12;
-    const n = t * 12;
-    if (mr === 0) return p / n;
-    return (p * mr * Math.pow(1 + mr, n)) / (Math.pow(1 + mr, n) - 1);
-  };
-  const current = monthly(currentRate, balance, termYears) * termYears * 12;
-  const market  = monthly(marketRate,  balance, termYears) * termYears * 12;
-  return Math.max(0, Math.round(current - market));
-}
 
 /* ── SHARED COMPONENT TYPES ── */
 interface StepProps {
@@ -88,16 +58,11 @@ export default function CarLoanCalculator() {
   const [step, setStep]               = useState(0);
   const [animDir, setAnimDir]         = useState<'forward' | 'back'>('forward');
   const [isAnimating, setIsAnimating] = useState(false);
-  const [showResult, setShowResult]   = useState(false);
   const [isLoading, setIsLoading]     = useState(false);
   const [form, setForm]               = useState<FormState>(EMPTY_FORM);
   const [errors, setErrors]           = useState<Errors>({});
 
   const set = (key: keyof FormState, val: string) => setForm(f => ({ ...f, [key]: val }));
-
-  const savings = form.remBal && form.currentRate && form.remTerm
-    ? calcSavings(parseFloat(form.remBal), parseFloat(form.currentRate), MARKET_RATE, parseFloat(form.remTerm))
-    : 0;
 
   const roast = form.currentRate ? getRoastGrade(parseFloat(form.currentRate)) : null;
 
@@ -159,19 +124,40 @@ export default function CarLoanCalculator() {
     setErrors(e);
     if (Object.keys(e).length > 0) return;
     setIsLoading(true);
-    setTimeout(() => { setIsLoading(false); setShowResult(true); }, 2200);
+    setTimeout(() => {
+      const currentRate  = parseFloat(form.currentRate);
+      const termYears    = parseFloat(form.remTerm);
+      const savings      = calcSavings(parseFloat(form.remBal), currentRate, MARKET_RATE, termYears);
+      const roastGrade   = getRoastGrade(currentRate);
+      const monthlyDiff  = savings > 0 ? Math.round(savings / (termYears * 12)) : 0;
+      const rateGap      = (currentRate - MARKET_RATE).toFixed(2);
+
+      const params = new URLSearchParams({
+        firstName:   form.firstName,
+        lastName:    form.lastName,
+        email:       form.email,
+        phone:       form.phone,
+        loanAmt:     form.loanAmt,
+        currentRate: form.currentRate,
+        remBal:      form.remBal,
+        remTerm:     form.remTerm,
+        loanSource:  form.loanSource,
+        employment:  form.employment,
+        income:      form.income,
+        state:       form.state,
+        savings:     String(savings),
+        monthlyDiff: String(monthlyDiff),
+        grade:       roastGrade.grade,
+        gradeLabel:  roastGrade.label,
+        marketRate:  String(MARKET_RATE),
+        rateGap,
+      });
+
+      window.location.href = `https://aizall53.sg-host.com/result/?${params.toString()}`;
+    }, 2200);
   }
 
-  const progress = showResult ? 100 : ((step + 1) / STEPS.length) * 100;
-
-  if (showResult && roast) {
-    return (
-      <ResultScreen
-        form={form} roast={roast} savings={savings}
-        onReset={() => { setShowResult(false); setStep(0); setForm(EMPTY_FORM); }}
-      />
-    );
-  }
+  const progress = ((step + 1) / STEPS.length) * 100;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-3 sm:px-4 py-6 sm:py-10 bg-gradient-to-br from-slate-50 via-white to-[#fff5f0]">
@@ -473,81 +459,6 @@ function LoadingScreen() {
             style={{ animation: `bounce-dot 0.8s ease-in-out ${i * 0.15}s infinite` }}
           />
         ))}
-      </div>
-    </div>
-  );
-}
-
-/* ── RESULT SCREEN ── */
-interface ResultScreenProps {
-  form: FormState;
-  roast: RoastGrade;
-  savings: number;
-  onReset: () => void;
-}
-
-function ResultScreen({ form, roast, savings, onReset }: ResultScreenProps) {
-  const currentRate  = parseFloat(form.currentRate);
-  const monthlyDiff  = savings > 0 ? Math.round(savings / (parseFloat(form.remTerm) * 12)) : 0;
-  const rateGapRaw   = currentRate - MARKET_RATE;
-  const rateGapLabel = rateGapRaw > 0 ? `+${rateGapRaw.toFixed(2)}%` : `${rateGapRaw.toFixed(2)}%`;
-
-  return (
-    <div className="min-h-screen flex items-center justify-center px-3 sm:px-4 py-6 sm:py-10 bg-gradient-to-br from-slate-50 via-white to-[#fff5f0]">
-      <div className="w-full max-w-[520px] bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_32px_80px_-8px_rgba(0,0,0,0.10)] ring-1 ring-black/5">
-
-        <div className="h-1 bg-gradient-to-r from-[#FF4C0C] to-[#ff6b35]" />
-
-        {/* Grade */}
-        <div className="text-center px-4 sm:px-6 pt-6 sm:pt-8 pb-2">
-          <p className="text-[11px] font-bold tracking-widest uppercase text-gray-400 mb-4 sm:mb-5">Your Rate Roast Result</p>
-          <div className={cn(
-            'w-20 h-20 sm:w-24 sm:h-24 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center ring-4',
-            roast.bg, roast.ring,
-          )}>
-            <span className={cn('font-heading text-4xl sm:text-5xl font-bold', roast.color)}>{roast.grade}</span>
-          </div>
-          <h2 className={cn('font-heading text-xl sm:text-2xl font-bold mb-1', roast.color)}>{roast.label}</h2>
-          <p className="text-sm text-gray-500 max-w-xs mx-auto leading-relaxed">{roast.msg}</p>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 px-4 sm:px-6 pt-4">
-          {[
-            { label: 'Your Rate',   value: `${currentRate}%`,  cls: roast.color },
-            { label: 'Market Rate', value: `${MARKET_RATE}%`,  cls: 'text-emerald-600' },
-            { label: 'Rate Gap',    value: rateGapLabel,         cls: rateGapRaw > 0 ? 'text-[#FF4C0C]' : 'text-emerald-600' },
-          ].map(s => (
-            <div key={s.label} className="bg-gray-50 rounded-xl sm:rounded-2xl px-2 sm:px-3 py-3 sm:py-4 text-center">
-              <p className="text-[10px] sm:text-[11px] text-gray-400 mb-1 sm:mb-1.5 uppercase tracking-wide">{s.label}</p>
-              <p className={cn('font-heading text-lg sm:text-xl font-bold', s.cls)}>{s.value}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Savings */}
-        {savings > 0 && (
-          <div className="mx-4 sm:mx-6 mt-3 sm:mt-4 bg-emerald-50 border border-emerald-100 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-4 sm:py-5 text-center">
-            <p className="text-xs font-semibold text-emerald-700 mb-1">Potential total savings if you refinance today</p>
-            <p className="font-heading text-3xl sm:text-4xl font-bold text-emerald-600 mb-1">${savings.toLocaleString()}</p>
-            <p className="text-xs text-gray-500">That&apos;s ~${monthlyDiff}/month back in your pocket</p>
-          </div>
-        )}
-
-        {/* CTA */}
-        <div className="px-4 sm:px-6 py-5 sm:py-6">
-          <FireButton onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            🔥 Connect Me With a Specialist
-          </FireButton>
-          <button
-            type="button"
-            onClick={onReset}
-            className="mt-2.5 w-full rounded-xl border border-gray-200 py-3 sm:py-3.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
-          >
-            ← Start Over
-          </button>
-          <Note>Free service. A broker specialist may contact you with options. No obligation.</Note>
-        </div>
       </div>
     </div>
   );

@@ -9,17 +9,17 @@ import { MARKET_RATE, getRoastGrade, calcSavings } from '@/lib/calculations';
 const STEPS = ['Loan', 'Source', 'Employment', 'Profile', 'Contact'] as const;
 
 const loanSources = [
-  { id: 'bank',    icon: '🏦', label: 'Bank / Credit Union', sub: 'ANZ, CBA, NAB' },
-  { id: 'dealer',  icon: '🚘', label: 'Car Dealership',       sub: 'In-house finance' },
-  { id: 'broker',  icon: '🤝', label: 'Broker / Lender',      sub: 'Pepper, Latitude' },
-  { id: 'notsure', icon: '🤷', label: 'Not Sure',             sub: "Can't remember" },
+  { id: 'bank',    label: 'Bank / Credit Union', sub: 'ANZ, CBA, NAB' },
+  { id: 'dealer',  label: 'Car Dealership',       sub: 'In-house finance' },
+  { id: 'broker',  label: 'Broker / Lender',      sub: 'Pepper, Latitude' },
+  { id: 'notsure', label: 'Not Sure',             sub: "Can't remember" },
 ];
 
 const employmentTypes = [
-  { id: 'fulltime',     icon: '💼', label: 'Full-Time' },
-  { id: 'parttime',     icon: '⏰', label: 'Part-Time' },
-  { id: 'selfemployed', icon: '🏢', label: 'Self-Employed' },
-  { id: 'casual',       icon: '📋', label: 'Casual' },
+  { id: 'fulltime',     label: 'Full-Time' },
+  { id: 'parttime',     label: 'Part-Time' },
+  { id: 'selfemployed', label: 'Self-Employed' },
+  { id: 'casual',       label: 'Casual' },
 ];
 
 const LOADING_MSGS = [
@@ -171,7 +171,7 @@ export default function CarLoanCalculator() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-5">
           <span className="inline-flex items-center gap-1 sm:gap-1.5 bg-[#FF4C0C] text-white rounded-full px-2.5 sm:px-3.5 py-1 text-[10px] sm:text-[11px] font-bold tracking-widest uppercase">
-            🔥 Free Rate Roast
+            Free Rate Roast
           </span>
 
           {/* Step indicator — dots on xs, numbered circles on sm+ */}
@@ -302,7 +302,7 @@ function Step0({ form, set, errors, onNext }: StepProps) {
       )}
 
       <FireButton onClick={onNext}>Continue →</FireButton>
-      <Note>🔒 No credit check. No spam. Takes 60 seconds.</Note>
+      <Note>No credit check. No spam. Takes 60 seconds.</Note>
     </div>
   );
 }
@@ -317,7 +317,6 @@ function Step1({ form, set, errors, onNext, onBack }: StepProps) {
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {loanSources.map(s => (
             <PillButton key={s.id} selected={form.loanSource === s.id} onClick={() => set('loanSource', s.id)}>
-              <span className="text-2xl sm:text-3xl mb-0.5">{s.icon}</span>
               <span className="text-[12px] sm:text-[13px] font-semibold text-slate-800 leading-tight">{s.label}</span>
               <span className="text-[11px] text-gray-400">{s.sub}</span>
             </PillButton>
@@ -329,7 +328,7 @@ function Step1({ form, set, errors, onNext, onBack }: StepProps) {
         <BackButton onClick={onBack}>← Back</BackButton>
         <FireButton onClick={onNext} flex>Continue →</FireButton>
       </div>
-      <Note>🔒 Soft enquiry only — no credit score impact</Note>
+      <Note>Soft enquiry only — no credit score impact</Note>
     </div>
   );
 }
@@ -344,7 +343,6 @@ function Step2({ form, set, errors, onNext, onBack }: StepProps) {
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {employmentTypes.map(e => (
             <PillButton key={e.id} selected={form.employment === e.id} onClick={() => set('employment', e.id)}>
-              <span className="text-2xl sm:text-3xl mb-0.5">{e.icon}</span>
               <span className="text-[12px] sm:text-[13px] font-semibold text-slate-800">{e.label}</span>
             </PillButton>
           ))}
@@ -355,7 +353,7 @@ function Step2({ form, set, errors, onNext, onBack }: StepProps) {
         <BackButton onClick={onBack}>← Back</BackButton>
         <FireButton onClick={onNext} flex>Continue →</FireButton>
       </div>
-      <Note>🔒 Soft enquiry only — no credit score impact</Note>
+      <Note>Soft enquiry only — no credit score impact</Note>
     </div>
   );
 }
@@ -387,7 +385,7 @@ function Step3({ form, set, errors, onNext, onBack }: StepProps) {
         <BackButton onClick={onBack}>← Back</BackButton>
         <FireButton onClick={onNext} flex>Continue →</FireButton>
       </div>
-      <Note>🔒 Your information is kept private and secure</Note>
+      <Note>Your information is kept private and secure</Note>
     </div>
   );
 }
@@ -429,7 +427,7 @@ function Step4({ form, set, errors, onSubmit, onBack }: Step4Props) {
 
       <div className="flex gap-2 sm:gap-2.5 mt-1">
         <BackButton onClick={onBack}>← Back</BackButton>
-        <FireButton onClick={onSubmit} flex>🔥 Get My Rate Roast</FireButton>
+        <FireButton onClick={onSubmit} flex>Get My Rate Roast</FireButton>
       </div>
       <Note>By submitting you agree to our Privacy Policy. A specialist may reach out with options.</Note>
     </div>
@@ -451,7 +449,7 @@ function LoadingScreen() {
 
   return (
     <div className="flex flex-col items-center justify-center py-12 sm:py-14 px-4 sm:px-6 text-center">
-      <span className="text-5xl animate-spin inline-block">🔥</span>
+      <span className="w-10 h-10 rounded-full border-4 border-[#FF4C0C] border-t-transparent animate-spin inline-block" />
       <p className="mt-5 text-sm text-gray-500 font-medium min-h-[20px]">{msg}</p>
       <div className="flex items-center gap-1.5 mt-4">
         {[0, 1, 2].map(i => (

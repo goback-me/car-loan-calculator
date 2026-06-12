@@ -361,7 +361,15 @@ export default function LoanQualifyForm() {
 
                 <div className="flex gap-2.5 mt-2">
                   <BB onClick={goBack}>Back</BB>
-                  <GB onClick={() => { if (validate3()) setSubmitted(true); }} flex>Submit Application</GB>
+                  <GB onClick={async () => {
+                    if (!validate3()) return;
+                    await fetch('/api/submit-qualify', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(form),
+                    }).catch(() => {});
+                    setSubmitted(true);
+                  }} flex>Submit Application</GB>
                 </div>
                 <Note>By continuing, you agree to our Privacy Policy. A specialist may contact you.</Note>
               </div>

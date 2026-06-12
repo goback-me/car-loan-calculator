@@ -124,7 +124,7 @@ export default function CarLoanApply() {
     setTimeout(goNext, 160);
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const e: ContactErrors = {};
     if (!form.firstName.trim())                          e.firstName = 'Required';
     if (!form.lastName.trim())                           e.lastName  = 'Required';
@@ -135,6 +135,13 @@ export default function CarLoanApply() {
     if (Object.keys(e).length > 0) return;
 
     setIsLoading(true);
+
+    await fetch('/api/submit-apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    }).catch(() => {});
+
     setTimeout(() => {
       const params = new URLSearchParams({
         vehicle:     form.vehicle,

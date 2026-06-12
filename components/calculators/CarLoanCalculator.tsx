@@ -9,17 +9,17 @@ import { MARKET_RATE, getRoastGrade, calcSavings } from '@/lib/calculations';
 const STEPS = ['Loan', 'Source', 'Employment', 'Profile', 'Contact'] as const;
 
 const loanSources = [
-  { id: 'bank',    label: 'Bank / Credit Union', sub: 'ANZ, CBA, NAB' },
-  { id: 'dealer',  label: 'Car Dealership',       sub: 'In-house finance' },
-  { id: 'broker',  label: 'Broker / Lender',      sub: 'Pepper, Latitude' },
-  { id: 'notsure', label: 'Not Sure',             sub: "Can't remember" },
+  { id: 'bank',    icon: '🏦', label: 'Bank / Credit Union', sub: 'ANZ, CBA, NAB' },
+  { id: 'dealer',  icon: '🚘', label: 'Car Dealership',       sub: 'In-house finance' },
+  { id: 'broker',  icon: '🤝', label: 'Broker / Lender',      sub: 'Pepper, Latitude' },
+  { id: 'notsure', icon: '🤷', label: 'Not Sure',             sub: "Can't remember" },
 ];
 
 const employmentTypes = [
-  { id: 'fulltime',     label: 'Full-Time' },
-  { id: 'parttime',     label: 'Part-Time' },
-  { id: 'selfemployed', label: 'Self-Employed' },
-  { id: 'casual',       label: 'Casual' },
+  { id: 'fulltime',     icon: '💼', label: 'Full-Time' },
+  { id: 'parttime',     icon: '⏰', label: 'Part-Time' },
+  { id: 'selfemployed', icon: '🏢', label: 'Self-Employed' },
+  { id: 'casual',       icon: '📋', label: 'Casual' },
 ];
 
 const LOADING_MSGS = [
@@ -64,7 +64,6 @@ export default function CarLoanCalculator() {
 
   const set = (key: keyof FormState, val: string) => setForm(f => ({ ...f, [key]: val }));
 
-  const roast = form.currentRate ? getRoastGrade(parseFloat(form.currentRate)) : null;
 
   function goNext() {
     setAnimDir('forward');
@@ -213,15 +212,6 @@ export default function CarLoanCalculator() {
           />
         </div>
 
-        {/* Rate preview chip */}
-        {form.currentRate && roast && (
-          <div className="mx-4 sm:mx-6 mt-3 flex items-center justify-between bg-gray-50 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5">
-            <span className="text-xs text-gray-400 font-medium">Your rate:</span>
-            <span className={cn('text-xs sm:text-sm font-bold', roast.color)}>
-              {form.currentRate}% — {roast.label}
-            </span>
-          </div>
-        )}
 
         {/* Step content */}
         <div className="overflow-hidden">
@@ -251,9 +241,6 @@ export default function CarLoanCalculator() {
 
 /* ── STEP 0 — Loan details ── */
 function Step0({ form, set, errors, onNext }: StepProps) {
-  const liveSavings = form.remBal && form.currentRate && form.remTerm
-    ? calcSavings(parseFloat(form.remBal), parseFloat(form.currentRate), MARKET_RATE, parseFloat(form.remTerm))
-    : null;
 
   return (
     <div className="px-4 sm:px-6 py-4 sm:py-5">
@@ -294,12 +281,6 @@ function Step0({ form, set, errors, onNext }: StepProps) {
         </Field>
       </div>
 
-      {liveSavings !== null && (
-        <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 mb-1">
-          <span className="text-[12px] sm:text-[13px] text-emerald-700 font-medium">Potential savings vs market</span>
-          <span className="text-base sm:text-lg font-bold text-emerald-600 font-heading">${liveSavings.toLocaleString()}</span>
-        </div>
-      )}
 
       <FireButton onClick={onNext}>Continue →</FireButton>
       <Note>No credit check. No spam. Takes 60 seconds.</Note>
@@ -317,6 +298,7 @@ function Step1({ form, set, errors, onNext, onBack }: StepProps) {
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {loanSources.map(s => (
             <PillButton key={s.id} selected={form.loanSource === s.id} onClick={() => set('loanSource', s.id)}>
+              <span className="text-2xl sm:text-3xl mb-0.5">{s.icon}</span>
               <span className="text-[12px] sm:text-[13px] font-semibold text-slate-800 leading-tight">{s.label}</span>
               <span className="text-[11px] text-gray-400">{s.sub}</span>
             </PillButton>
@@ -343,6 +325,7 @@ function Step2({ form, set, errors, onNext, onBack }: StepProps) {
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {employmentTypes.map(e => (
             <PillButton key={e.id} selected={form.employment === e.id} onClick={() => set('employment', e.id)}>
+              <span className="text-2xl sm:text-3xl mb-0.5">{e.icon}</span>
               <span className="text-[12px] sm:text-[13px] font-semibold text-slate-800">{e.label}</span>
             </PillButton>
           ))}

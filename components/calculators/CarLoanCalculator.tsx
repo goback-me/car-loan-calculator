@@ -152,7 +152,7 @@ export default function CarLoanCalculator() {
         rateGap,
       });
 
-      const url = `https://aizall53.sg-host.com/result/?${params.toString()}`;
+      const url = `https://ratemycarloan.com.au/results/?${params.toString()}`;
       // Navigate the top-level window so the redirect escapes the iframe
       (window.top || window).location.href = url;
     }, 2200);

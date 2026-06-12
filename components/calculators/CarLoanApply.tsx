@@ -165,14 +165,14 @@ export default function CarLoanApply() {
   if (isLoading) return <LoadingScreen />;
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-3 sm:px-4 py-6 sm:py-10 bg-gradient-to-br from-slate-50 via-white to-[#fff5f0]">
-      <div className="w-full max-w-[560px] bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_32px_80px_-8px_rgba(0,0,0,0.10),0_8px_32px_-8px_rgba(255,76,12,0.07)] ring-1 ring-black/5">
+    <div className="min-h-screen flex items-center justify-center px-3 sm:px-4 py-6 sm:py-10 bg-gradient-to-br from-slate-50 via-white to-[#f0fdf4]">
+      <div className="w-full max-w-[560px] bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_32px_80px_-8px_rgba(0,0,0,0.10),0_8px_32px_-8px_rgba(0,141,59,0.07)] ring-1 ring-black/5">
 
-        <div className="h-1 bg-gradient-to-r from-[#FF4C0C] to-[#ff6b35]" />
+        <div className="h-1 bg-gradient-to-r from-[#008D3B] to-[#00b84d]" />
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-5">
-          <span className="inline-flex items-center bg-[#FF4C0C] text-white rounded-full px-3 py-1 text-[10px] sm:text-[11px] font-bold tracking-widest uppercase">
+          <span className="inline-flex items-center bg-[#008D3B] text-white rounded-full px-3 py-1 text-[10px] sm:text-[11px] font-bold tracking-widest uppercase">
 Find My Best Rate
           </span>
           <span className="text-[11px] text-gray-400 font-medium">Step {step + 1} of {STEPS.length}</span>
@@ -181,7 +181,7 @@ Find My Best Rate
         {/* Progress bar */}
         <div className="mx-4 sm:mx-6 mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-[#FF4C0C] to-[#ff6b35] rounded-full transition-[width] duration-500 ease-out"
+            className="h-full bg-gradient-to-r from-[#008D3B] to-[#00b84d] rounded-full transition-[width] duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -239,8 +239,8 @@ function StepVehicle({ selected, onSelect }: { selected: string; onSelect: (v: s
             className={cn(
               'flex flex-col items-center gap-1.5 rounded-xl border px-2 py-4 text-center cursor-pointer transition-all duration-150',
               selected === v.id
-                ? 'border-[#FF4C0C] bg-[#FFF1EC] shadow-sm ring-1 ring-[#FF4C0C]/30'
-                : 'border-gray-200 bg-white hover:border-[#FF4C0C] hover:bg-[#FFF8F5]',
+                ? 'border-[#008D3B] bg-[#ecfdf5] shadow-sm ring-1 ring-[#008D3B]/30'
+                : 'border-gray-200 bg-white hover:border-[#008D3B] hover:bg-[#f0fdf4]',
             )}
           >
             <span className="text-3xl">{v.icon}</span>
@@ -263,7 +263,7 @@ function StepAmount({ value, onChange, onNext, onBack }: { value: number; onChan
 
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm text-gray-500 font-medium">${MIN_BORROW.toLocaleString()}</span>
-        <span className="text-2xl sm:text-3xl font-bold text-[#FF4C0C] font-heading">${value.toLocaleString()}</span>
+        <span className="text-2xl sm:text-3xl font-bold text-[#008D3B] font-heading">${value.toLocaleString()}</span>
         <span className="text-sm text-gray-500 font-medium">${(MAX_BORROW / 1000).toFixed(0)}k</span>
       </div>
 
@@ -271,7 +271,7 @@ function StepAmount({ value, onChange, onNext, onBack }: { value: number; onChan
       <div className="relative mb-6">
         <div className="relative h-2 bg-gray-100 rounded-full">
           <div
-            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#FF4C0C] to-[#ff6b35] rounded-full"
+            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#008D3B] to-[#00b84d] rounded-full"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -289,7 +289,7 @@ function StepAmount({ value, onChange, onNext, onBack }: { value: number; onChan
         />
         {/* Thumb */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-[#FF4C0C] rounded-full shadow-md pointer-events-none"
+          className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-[#008D3B] rounded-full shadow-md pointer-events-none"
           style={{ left: `calc(${pct}% - 10px)` }}
         />
       </div>
@@ -314,8 +314,8 @@ function StepEmployment({ selected, onSelect, onBack }: { selected: string; onSe
             className={cn(
               'w-full text-left rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-150',
               selected === e.id
-                ? 'border-[#FF4C0C] bg-[#FFF1EC] text-[#FF4C0C] shadow-sm ring-1 ring-[#FF4C0C]/30'
-                : 'border-gray-200 text-slate-700 hover:border-[#FF4C0C] hover:bg-[#FFF8F5]',
+                ? 'border-[#008D3B] bg-[#ecfdf5] text-[#008D3B] shadow-sm ring-1 ring-[#008D3B]/30'
+                : 'border-gray-200 text-slate-700 hover:border-[#008D3B] hover:bg-[#f0fdf4]',
             )}
           >
             {e.label}
@@ -343,8 +343,8 @@ function StepIncome({ selected, onSelect, onBack }: { selected: string; onSelect
             className={cn(
               'w-full text-left rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-150',
               selected === r.id
-                ? 'border-[#FF4C0C] bg-[#FFF1EC] text-[#FF4C0C] shadow-sm ring-1 ring-[#FF4C0C]/30'
-                : 'border-gray-200 text-slate-700 hover:border-[#FF4C0C] hover:bg-[#FFF8F5]',
+                ? 'border-[#008D3B] bg-[#ecfdf5] text-[#008D3B] shadow-sm ring-1 ring-[#008D3B]/30'
+                : 'border-gray-200 text-slate-700 hover:border-[#008D3B] hover:bg-[#f0fdf4]',
             )}
           >
             {r.label}
@@ -372,8 +372,8 @@ function StepCitizenship({ selected, onSelect, onBack }: { selected: string; onS
             className={cn(
               'w-full text-left rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-150',
               selected === c.id
-                ? 'border-[#FF4C0C] bg-[#FFF1EC] text-[#FF4C0C] shadow-sm ring-1 ring-[#FF4C0C]/30'
-                : 'border-gray-200 text-slate-700 hover:border-[#FF4C0C] hover:bg-[#FFF8F5]',
+                ? 'border-[#008D3B] bg-[#ecfdf5] text-[#008D3B] shadow-sm ring-1 ring-[#008D3B]/30'
+                : 'border-gray-200 text-slate-700 hover:border-[#008D3B] hover:bg-[#f0fdf4]',
             )}
           >
             {c.label}
@@ -401,11 +401,11 @@ function StepCreditScore({ selected, onSelect, onBack }: { selected: string; onS
             className={cn(
               'w-full flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-150',
               selected === c.id
-                ? 'border-[#FF4C0C] bg-[#FFF1EC] shadow-sm ring-1 ring-[#FF4C0C]/30'
-                : 'border-gray-200 bg-white hover:border-[#FF4C0C] hover:bg-[#FFF8F5]',
+                ? 'border-[#008D3B] bg-[#ecfdf5] shadow-sm ring-1 ring-[#008D3B]/30'
+                : 'border-gray-200 bg-white hover:border-[#008D3B] hover:bg-[#f0fdf4]',
             )}
           >
-            <span className={cn('text-sm font-semibold', selected === c.id ? 'text-[#FF4C0C]' : 'text-slate-700')}>{c.label}</span>
+            <span className={cn('text-sm font-semibold', selected === c.id ? 'text-[#008D3B]' : 'text-slate-700')}>{c.label}</span>
             <span className="text-xs text-gray-400">{c.sub}</span>
           </button>
         ))}
@@ -510,13 +510,13 @@ function LoadingScreen() {
     return () => clearInterval(t);
   }, []);
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-slate-50 via-white to-[#fff5f0]">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-slate-50 via-white to-[#f0fdf4]">
       <div className="flex flex-col items-center gap-5">
-        <span className="w-12 h-12 rounded-full border-4 border-[#FF4C0C] border-t-transparent animate-spin inline-block" />
+        <span className="w-12 h-12 rounded-full border-4 border-[#008D3B] border-t-transparent animate-spin inline-block" />
         <p className="text-sm text-gray-500 font-medium">{msg}</p>
         <div className="flex gap-1.5">
           {[0, 1, 2].map(i => (
-            <span key={i} className="w-2 h-2 rounded-full bg-[#FF4C0C] inline-block"
+            <span key={i} className="w-2 h-2 rounded-full bg-[#008D3B] inline-block"
               style={{ animation: `bounce-dot 0.8s ease-in-out ${i * 0.15}s infinite` }} />
           ))}
         </div>
@@ -540,7 +540,7 @@ function Field({ label, children, error }: { label: string; children: React.Reac
     <div className="mb-3">
       <label className="block text-[10px] sm:text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">{label}</label>
       {children}
-      {error && <p className="text-[11px] text-[#FF4C0C] mt-1">{error}</p>}
+      {error && <p className="text-[11px] text-[#008D3B] mt-1">{error}</p>}
     </div>
   );
 }
@@ -551,10 +551,10 @@ function FireButton({ onClick, children, flex }: { onClick: () => void; children
       type="button"
       onClick={onClick}
       className={cn(
-        'flex items-center justify-center rounded-xl bg-[#FF4C0C] text-white',
+        'flex items-center justify-center rounded-xl bg-[#008D3B] text-white',
         'font-heading font-bold text-[14px] sm:text-[15px] py-3.5 sm:py-4 mt-1.5',
-        'transition-all hover:bg-[#d63d08] active:scale-[0.98]',
-        'hover:shadow-[0_8px_24px_-4px_rgba(255,76,12,0.45)]',
+        'transition-all hover:bg-[#006b2c] active:scale-[0.98]',
+        'hover:shadow-[0_8px_24px_-4px_rgba(0,141,59,0.45)]',
         flex ? 'flex-1' : 'w-full',
       )}
     >

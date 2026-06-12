@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ChevronDownIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -83,6 +84,7 @@ const EMPTY_FORM: FormState = {
 
 /* ── MAIN ── */
 export default function CarLoanApply() {
+  const router                        = useRouter();
   const [step, setStep]               = useState(0);
   const [animDir, setAnimDir]         = useState<'forward' | 'back'>('forward');
   const [isAnimating, setIsAnimating] = useState(false);
@@ -106,6 +108,18 @@ export default function CarLoanApply() {
   }
 
   function pick<K extends keyof FormState>(key: K, val: FormState[K]) {
+    if (key === 'employment' && (val === 'unemployed' || val === 'centrelink')) {
+      router.push('/appreciated');
+      return;
+    }
+    if (key === 'income' && val === 'under3k') {
+      router.push('/appreciated');
+      return;
+    }
+    if (key === 'citizenship' && val === 'visa') {
+      router.push('/appreciated');
+      return;
+    }
     set(key, val);
     setTimeout(goNext, 160);
   }

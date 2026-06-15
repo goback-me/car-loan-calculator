@@ -319,7 +319,7 @@ function StepVehicleType({ selected, onSelect }: { selected: string; onSelect: (
               fetchPriority="high"
               className={cn(
                 'w-28 h-28 object-contain transition-all duration-200',
-                selected === v.id ? 'grayscale-0 scale-105' : 'grayscale group-hover:grayscale-0 group-hover:scale-110 group-hover:brightness-110',
+                selected === v.id ? 'scale-105' : 'group-hover:scale-110',
               )}
             />
             <span className="text-[15px] font-semibold text-slate-800">{v.label}</span>
@@ -357,7 +357,7 @@ function StepVehicleCondition({ selected, onSelect, onBack }: { selected: string
               alt={opt.label}
               className={cn(
                 'w-28 h-28 object-contain transition-all duration-200',
-                selected === opt.id ? 'grayscale-0 scale-105' : 'grayscale group-hover:grayscale-0 group-hover:scale-110 group-hover:brightness-110',
+                selected === opt.id ? 'scale-105' : 'group-hover:scale-110',
               )}
             />
             <span className="text-[15px] font-semibold text-slate-800">{opt.label}</span>

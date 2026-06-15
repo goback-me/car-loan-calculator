@@ -25,17 +25,19 @@ function classify(b: Body): Quality {
 
   // ── DISQUALIFY ───────────────────────────────────────────────
   // Retired or Centrelink
-  if (employment === 'retired' || employment === 'centrelink') return 'disqualify';
+  if (employment === 'retired' || employment === 'centrelink' || employment === 'unemployed') return 'disqualify';
   // Income too low
   if (annualIncome === 'under30k') return 'disqualify';
   // Visa holder
   if (residency === 'visa') return 'disqualify';
-  // ABN but not GST registered, or ABN < 2 years old (gstVerified stores the abn-age answer)
-  if (employment === 'abn' && (gstRegistered === 'no' || gstVerified === 'no')) return 'disqualify';
+  // ABN < 2 years old — disqualify
+  if (employment === 'abn' && gstVerified === 'no') return 'disqualify';
   // Has defaults and NOT in a payment plan
   if (hasDefaults === 'yes' && inPaymentPlan === 'no') return 'disqualify';
 
   // ── BAD QUALITY LEAD ─────────────────────────────────────────
+  // ABN but not GST registered
+  if (employment === 'abn' && gstRegistered === 'no') return 'bad';
   // Casual or Part-Time employment
   if (employment === 'casual' || employment === 'part-time') return 'bad';
   // Income between $30k–$50k

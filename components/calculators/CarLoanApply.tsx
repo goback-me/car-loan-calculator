@@ -14,12 +14,13 @@ const vehicleTypes = [
 ];
 
 const employmentTypes = [
-  { id: 'full-time',  label: 'Full-Time' },
-  { id: 'casual',     label: 'Casual' },
-  { id: 'part-time',  label: 'Part-Time' },
-  { id: 'retired',    label: 'Retired' },
-  { id: 'centrelink', label: 'Centrelink' },
-  { id: 'abn',        label: 'ABN / Self-Employed' },
+  { id: 'full-time',   label: 'Full-Time' },
+  { id: 'casual',      label: 'Casual' },
+  { id: 'part-time',   label: 'Part-Time' },
+  { id: 'retired',     label: 'Retired' },
+  { id: 'centrelink',  label: 'Centrelink' },
+  { id: 'abn',         label: 'ABN / Self-Employed' },
+  { id: 'unemployed',  label: 'Unemployed' },
 ];
 
 const incomeRanges = [
@@ -81,6 +82,12 @@ const EMPTY_FORM: FormState = {
   state: '', fullName: '', mobile: '', email: '',
 };
 
+/* ── Shared disqualify helper — marks user then redirects the top frame ── */
+function goAppreciated() {
+  try { localStorage.setItem('car_loan_disqualified', '1'); } catch {}
+  (window.top || window).location.href = '/appreciated';
+}
+
 /* ── MAIN ── */
 export default function CarLoanApply() {
   const [step, setStep]                 = useState(0);
@@ -91,6 +98,21 @@ export default function CarLoanApply() {
   const [showGSTPopup, setShowGSTPopup]       = useState(false);
   const [showCreditPopup, setShowCreditPopup] = useState(false);
   const [contactErrors, setContactErrors]     = useState<Partial<Record<'fullName'|'mobile'|'email', string>>>({});
+
+  // If the user was previously disqualified, send them straight back.
+  // Also fires on bfcache restore (browser back button) via the pageshow event.
+  useEffect(() => {
+    function checkDisqualified() {
+      try {
+        if (localStorage.getItem('car_loan_disqualified') === '1') {
+          (window.top || window).location.href = '/appreciated';
+        }
+      } catch {}
+    }
+    checkDisqualified();
+    window.addEventListener('pageshow', checkDisqualified);
+    return () => window.removeEventListener('pageshow', checkDisqualified);
+  }, []);
 
   const set = <K extends keyof FormState>(key: K, val: FormState[K]) =>
     setForm(f => ({ ...f, [key]: val }));
@@ -109,16 +131,16 @@ export default function CarLoanApply() {
 
   function pick<K extends keyof FormState>(key: K, val: FormState[K]) {
     // ── Instant disqualifiers — no point collecting more data ──
-    if (key === 'employment' && (val === 'retired' || val === 'centrelink')) {
-      window.location.href = '/appreciated';
+    if (key === 'employment' && (val === 'retired' || val === 'centrelink' || val === 'unemployed')) {
+      goAppreciated();
       return;
     }
     if (key === 'annualIncome' && val === 'under30k') {
-      window.location.href = '/appreciated';
+      goAppreciated();
       return;
     }
     if (key === 'residency' && val === 'visa') {
-      window.location.href = '/appreciated';
+      goAppreciated();
       return;
     }
 
@@ -578,7 +600,7 @@ function StepContact({ form, set, errors, onSubmit, onBack }: ContactProps) {
 
       <div className="flex gap-2.5 mt-5">
         <BackButton onClick={onBack}>Back</BackButton>
-        <FireButton onClick={onSubmit} flex>Get My Results</FireButton>
+        <FireButton onClick={onSubmit} flex>Submit</FireButton>
       </div>
       <p className="text-center text-[11px] text-gray-400 mt-2.5 leading-relaxed">
         By submitting you agree to our Privacy Policy. A specialist may reach out with options.
@@ -599,7 +621,7 @@ function CreditPopup({ onComplete }: { onComplete: (hasDefaults: string, inPayme
     if (!canContinue) return;
     // Has defaults but NOT managing them → disqualify immediately
     if (hasDefaults === 'yes' && inPaymentPlan === 'no') {
-      window.location.href = '/appreciated';
+      goAppreciated();
       return;
     }
     // Has defaults + in payment plan → bad quality lead, continue
@@ -695,17 +717,13 @@ function GSTPopup({ onComplete }: { onComplete: (gstRegistered: string, gstVerif
     setAbn(val);
     setGst(null); // reset Q2 if they change Q1
     if (val === 'no') {
-      window.location.href = '/appreciated';
+      goAppreciated();
     }
   }
 
   function handleContinue() {
     if (!canContinue) return;
-    if (gst === 'no') {
-      window.location.href = '/appreciated';
-      return;
-    }
-    onComplete('yes', 'yes');
+    onComplete(gst!, 'yes');
   }
 
   const btnCls = (selected: 'yes' | 'no' | null, opt: 'yes' | 'no') => cn(

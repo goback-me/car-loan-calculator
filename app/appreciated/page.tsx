@@ -1,3 +1,5 @@
+import AppreciatedForm from './AppreciatedForm';
+
 export const metadata = {
   title: 'We Appreciate Your Enquiry | LendaLink',
   description: 'Thank you for your enquiry with LendaLink Finance.',
@@ -67,11 +69,11 @@ export default function AppreciatedPage() {
             ))}
           </div>
 
-          {/* Divider */}
-          <div className="border-t border-gray-100 mb-6" />
+          {/* Leave details form */}
+          <AppreciatedForm />
 
           {/* Contact */}
-          <div className="text-center mb-6">
+          <div className="text-center mt-6 mb-2">
             <p className="text-sm text-gray-500 mb-3">Have questions? Our team is happy to help.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a href="tel:0251189201"
@@ -88,7 +90,7 @@ export default function AppreciatedPage() {
           {/* Back button */}
           <a
             href="https://lendalink.com.au"
-            className="flex items-center justify-center w-full rounded-xl bg-emerald-500 text-white font-bold text-sm py-3.5 hover:bg-emerald-600 active:scale-[0.98] transition-all hover:shadow-[0_8px_24px_-4px_rgba(16,185,129,0.4)]"
+            className="flex items-center justify-center w-full rounded-xl border border-gray-200 text-gray-500 font-semibold text-sm py-3 mt-4 hover:bg-gray-50 transition-colors"
           >
             Back to Home
           </a>

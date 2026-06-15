@@ -14,24 +14,23 @@ const vehicleTypes = [
 ];
 
 const employmentTypes = [
-  { id: 'full-time',          label: 'Full-Time' },
-  { id: 'casual-parttime',    label: 'Casual / Part-Time' },
-  { id: 'retired-centrelink', label: 'Retired / Centrelink' },
-  { id: 'abn',                label: 'ABN / Self-Employed' },
+  { id: 'full-time',          emoji: '💼', label: 'Full-Time' },
+  { id: 'casual-parttime',    emoji: '⏰', label: 'Casual / Part-Time' },
+  { id: 'retired-centrelink', emoji: '🏖️', label: 'Retired / Centrelink' },
+  { id: 'abn',                emoji: '🧾', label: 'ABN / Self-Employed' },
 ];
 
-
 const residencyOptions = [
-  { id: 'citizen', label: 'Australian Citizen' },
-  { id: 'pr',      label: 'Permanent Resident' },
-  { id: 'visa',    label: 'Visa Holder' },
+  { id: 'citizen', emoji: '🇦🇺', label: 'Australian Citizen' },
+  { id: 'pr',      emoji: '🏠',  label: 'Permanent Resident' },
+  { id: 'visa',    emoji: '✈️',  label: 'Visa Holder' },
 ];
 
 const creditOptions = [
-  { id: 'good',      label: 'Good' },
-  { id: 'average',   label: 'Average' },
-  { id: 'bad',       label: 'Bad' },
-  { id: 'dont-know', label: "Don't Know" },
+  { id: 'good',      emoji: '⭐', label: 'Good' },
+  { id: 'average',   emoji: '📊', label: 'Average' },
+  { id: 'bad',       emoji: '⚠️', label: 'Bad' },
+  { id: 'dont-know', emoji: '🤷', label: "Don't Know" },
 ];
 
 const AU_STATES = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
@@ -425,21 +424,26 @@ function StepEmployment({ selected, onSelect, onBack }: { selected: string; onSe
     <div className="px-4 sm:px-6 py-5 sm:py-6">
       <StepHeader title="What's your employment status?" sub="Lenders assess eligibility based on your employment type" />
       <div className="flex flex-col gap-2">
-        {employmentTypes.map(e => (
-          <button
-            key={e.id}
-            type="button"
-            onClick={() => onSelect(e.id)}
-            className={cn(
-              'w-full text-left rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-150',
-              selected === e.id
-                ? 'border-[#008D3B] bg-[#ecfdf5] text-[#008D3B] shadow-sm ring-1 ring-[#008D3B]/30'
-                : 'border-gray-200 text-slate-700 hover:border-[#008D3B] hover:bg-[#f0fdf4]',
-            )}
-          >
-            {e.label}
-          </button>
-        ))}
+        {employmentTypes.map(e => {
+          const active = selected === e.id;
+          return (
+            <button
+              key={e.id}
+              type="button"
+              onClick={() => onSelect(e.id)}
+              className={cn(
+                'w-full text-left rounded-xl border px-4 py-3 transition-all duration-150 flex items-center gap-3',
+                active
+                  ? 'border-[#008D3B] bg-[#ecfdf5] shadow-sm ring-1 ring-[#008D3B]/30'
+                  : 'border-gray-200 bg-white hover:border-[#008D3B] hover:bg-[#f0fdf4]',
+              )}
+            >
+              <span className="text-2xl leading-none shrink-0">{e.emoji}</span>
+              <span className={cn('flex-1 text-sm font-semibold', active ? 'text-[#008D3B]' : 'text-slate-700')}>{e.label}</span>
+              {active && <span className="w-5 h-5 rounded-full bg-[#008D3B] flex items-center justify-center shrink-0"><svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span>}
+            </button>
+          );
+        })}
       </div>
       <div className="mt-4">
         <BackButton onClick={onBack}>Back</BackButton>
@@ -525,21 +529,26 @@ function StepResidency({ selected, onSelect, onBack }: { selected: string; onSel
     <div className="px-4 sm:px-6 py-5 sm:py-6">
       <StepHeader title="What's your residency status?" sub="Helps us match you with the right lenders" />
       <div className="flex flex-col gap-2">
-        {residencyOptions.map(r => (
-          <button
-            key={r.id}
-            type="button"
-            onClick={() => onSelect(r.id)}
-            className={cn(
-              'w-full text-left rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-150',
-              selected === r.id
-                ? 'border-[#008D3B] bg-[#ecfdf5] text-[#008D3B] shadow-sm ring-1 ring-[#008D3B]/30'
-                : 'border-gray-200 text-slate-700 hover:border-[#008D3B] hover:bg-[#f0fdf4]',
-            )}
-          >
-            {r.label}
-          </button>
-        ))}
+        {residencyOptions.map(r => {
+          const active = selected === r.id;
+          return (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => onSelect(r.id)}
+              className={cn(
+                'w-full text-left rounded-xl border px-4 py-3 transition-all duration-150 flex items-center gap-3',
+                active
+                  ? 'border-[#008D3B] bg-[#ecfdf5] shadow-sm ring-1 ring-[#008D3B]/30'
+                  : 'border-gray-200 bg-white hover:border-[#008D3B] hover:bg-[#f0fdf4]',
+              )}
+            >
+              <span className="text-2xl leading-none shrink-0">{r.emoji}</span>
+              <span className={cn('flex-1 text-sm font-semibold', active ? 'text-[#008D3B]' : 'text-slate-700')}>{r.label}</span>
+              {active && <span className="w-5 h-5 rounded-full bg-[#008D3B] flex items-center justify-center shrink-0"><svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span>}
+            </button>
+          );
+        })}
       </div>
       <div className="mt-4">
         <BackButton onClick={onBack}>Back</BackButton>
@@ -554,21 +563,26 @@ function StepCreditHistory({ selected, onSelect, onBack }: { selected: string; o
     <div className="px-4 sm:px-6 py-5 sm:py-6">
       <StepHeader title="How would you rate your credit history?" sub="Approximate is fine — this helps match the right lenders" />
       <div className="flex flex-col gap-2">
-        {creditOptions.map(c => (
-          <button
-            key={c.id}
-            type="button"
-            onClick={() => onSelect(c.id)}
-            className={cn(
-              'w-full text-left rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-150',
-              selected === c.id
-                ? 'border-[#008D3B] bg-[#ecfdf5] text-[#008D3B] shadow-sm ring-1 ring-[#008D3B]/30'
-                : 'border-gray-200 text-slate-700 hover:border-[#008D3B] hover:bg-[#f0fdf4]',
-            )}
-          >
-            {c.label}
-          </button>
-        ))}
+        {creditOptions.map(c => {
+          const active = selected === c.id;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => onSelect(c.id)}
+              className={cn(
+                'w-full text-left rounded-xl border px-4 py-3 transition-all duration-150 flex items-center gap-3',
+                active
+                  ? 'border-[#008D3B] bg-[#ecfdf5] shadow-sm ring-1 ring-[#008D3B]/30'
+                  : 'border-gray-200 bg-white hover:border-[#008D3B] hover:bg-[#f0fdf4]',
+              )}
+            >
+              <span className="text-2xl leading-none shrink-0">{c.emoji}</span>
+              <span className={cn('flex-1 text-sm font-semibold', active ? 'text-[#008D3B]' : 'text-slate-700')}>{c.label}</span>
+              {active && <span className="w-5 h-5 rounded-full bg-[#008D3B] flex items-center justify-center shrink-0"><svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span>}
+            </button>
+          );
+        })}
       </div>
       <div className="mt-4">
         <BackButton onClick={onBack}>Back</BackButton>

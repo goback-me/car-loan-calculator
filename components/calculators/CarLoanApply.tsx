@@ -21,9 +21,9 @@ const employmentTypes = [
 ];
 
 const residencyOptions = [
-  { id: 'citizen', emoji: '🇦🇺', label: 'Australian Citizen' },
-  { id: 'pr',      emoji: '🏠',  label: 'Permanent Resident' },
-  { id: 'visa',    emoji: '✈️',  label: 'Visa Holder' },
+  { id: 'citizen', emoji: '',    img: '/australia-flag..png', label: 'Australian Citizen' },
+  { id: 'pr',      emoji: '🏠',  img: '',                     label: 'Permanent Resident' },
+  { id: 'visa',    emoji: '✈️',  img: '',                     label: 'Visa Holder' },
 ];
 
 const creditOptions = [
@@ -543,7 +543,10 @@ function StepResidency({ selected, onSelect, onBack }: { selected: string; onSel
                   : 'border-gray-200 bg-white hover:border-[#008D3B] hover:bg-[#f0fdf4]',
               )}
             >
-              <span className="text-2xl leading-none shrink-0">{r.emoji}</span>
+              {r.img
+                ? <img src={r.img} alt={r.label} className="w-7 h-7 object-contain shrink-0 rounded-sm" />
+                : <span className="text-2xl leading-none shrink-0">{r.emoji}</span>
+              }
               <span className={cn('flex-1 text-sm font-semibold', active ? 'text-[#008D3B]' : 'text-slate-700')}>{r.label}</span>
               {active && <span className="w-5 h-5 rounded-full bg-[#008D3B] flex items-center justify-center shrink-0"><svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span>}
             </button>

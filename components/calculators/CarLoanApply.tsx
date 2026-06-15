@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 
@@ -7,10 +7,10 @@ import { Input } from '@/components/ui/input';
 const TOTAL_STEPS = 9; // Name/Mobile/Email combined into one contact step
 
 const vehicleTypes = [
-  { id: 'car',            icon: '🚗', label: 'Car' },
-  { id: 'suv',            icon: '🚙', label: 'SUV' },
-  { id: 'ute-commercial', icon: '🚛', label: 'Ute / Commercial' },
-  { id: 'ev',             icon: '⚡', label: 'EV' },
+  { id: 'car',            img: '/car.png',        label: 'Car' },
+  { id: 'suv',            img: '/suv.png',        label: 'SUV' },
+  { id: 'ute-commercial', img: '/commercial.png', label: 'Ute / Commercial' },
+  { id: 'ev',             img: '/ev.png',         label: 'EV' },
 ];
 
 const employmentTypes = [
@@ -114,22 +114,22 @@ export default function CarLoanApply() {
     return () => window.removeEventListener('pageshow', checkDisqualified);
   }, []);
 
-  const set = <K extends keyof FormState>(key: K, val: FormState[K]) =>
-    setForm(f => ({ ...f, [key]: val }));
+  const set = useCallback(<K extends keyof FormState>(key: K, val: FormState[K]) =>
+    setForm(f => ({ ...f, [key]: val })), []);
 
-  function goNext() {
+  const goNext = useCallback(() => {
     setAnimDir('forward');
     setIsAnimating(true);
-    setTimeout(() => { setStep(s => s + 1); setIsAnimating(false); }, 280);
-  }
+    setTimeout(() => { setStep(s => s + 1); setIsAnimating(false); }, 200);
+  }, []);
 
-  function goBack() {
+  const goBack = useCallback(() => {
     setAnimDir('back');
     setIsAnimating(true);
-    setTimeout(() => { setStep(s => s - 1); setIsAnimating(false); }, 280);
-  }
+    setTimeout(() => { setStep(s => s - 1); setIsAnimating(false); }, 200);
+  }, []);
 
-  function pick<K extends keyof FormState>(key: K, val: FormState[K]) {
+  const pick = useCallback(<K extends keyof FormState>(key: K, val: FormState[K]) => {
     // ── Instant disqualifiers — no point collecting more data ──
     if (key === 'employment' && (val === 'retired' || val === 'centrelink' || val === 'unemployed')) {
       goAppreciated();
@@ -146,20 +146,22 @@ export default function CarLoanApply() {
 
     // ── Popups that collect extra data (API decides from here) ──
     if (key === 'employment' && val === 'abn') {
-      set(key, val);
+      setForm(f => ({ ...f, [key]: val }));
       setShowGSTPopup(true);
       return;
     }
     if (key === 'creditHistory' && val === 'bad') {
-      set(key, val);
+      setForm(f => ({ ...f, [key]: val }));
       setShowCreditPopup(true);
       return;
     }
 
-    // ── Everything else: store and advance ──
-    set(key, val);
-    setTimeout(goNext, 160);
-  }
+    // ── Everything else: store and advance immediately ──
+    setForm(f => ({ ...f, [key]: val }));
+    setAnimDir('forward');
+    setIsAnimating(true);
+    setTimeout(() => { setStep(s => s + 1); setIsAnimating(false); }, 200);
+  }, []);
 
   async function handleContactSubmit() {
     const errs: Partial<Record<'fullName'|'mobile'|'email', string>> = {};
@@ -194,7 +196,19 @@ export default function CarLoanApply() {
     }, 2200);
   }
 
-  const progress = ((step + 1) / TOTAL_STEPS) * 100;
+  const progress = useMemo(() => ((step + 1) / TOTAL_STEPS) * 100, [step]);
+
+  const onCreditComplete = useCallback((hasDefaults: string, inPaymentPlan: string) => {
+    setForm(f => ({ ...f, hasDefaults, inPaymentPlan }));
+    setShowCreditPopup(false);
+    goNext();
+  }, [goNext]);
+
+  const onGSTComplete = useCallback((gstRegistered: string, gstVerified: string) => {
+    setForm(f => ({ ...f, gstRegistered, gstVerified }));
+    setShowGSTPopup(false);
+    goNext();
+  }, [goNext]);
 
   if (isLoading) return <LoadingScreen />;
 
@@ -270,24 +284,12 @@ export default function CarLoanApply() {
 
       {/* Credit Popup — collects defaults data; API decides qualification */}
       {showCreditPopup && (
-        <CreditPopup
-          onComplete={(hasDefaults, inPaymentPlan) => {
-            setForm(f => ({ ...f, hasDefaults, inPaymentPlan }));
-            setShowCreditPopup(false);
-            goNext();
-          }}
-        />
+        <CreditPopup onComplete={onCreditComplete} />
       )}
 
       {/* GST Popup — collects GST data; API decides qualification */}
       {showGSTPopup && (
-        <GSTPopup
-          onComplete={(gstRegistered, gstVerified) => {
-            setForm(f => ({ ...f, gstRegistered, gstVerified }));
-            setShowGSTPopup(false);
-            goNext();
-          }}
-        />
+        <GSTPopup onComplete={onGSTComplete} />
       )}
     </div>
   );
@@ -305,14 +307,23 @@ function StepVehicleType({ selected, onSelect }: { selected: string; onSelect: (
             type="button"
             onClick={() => onSelect(v.id)}
             className={cn(
-              'flex flex-col items-center gap-2 rounded-xl border px-4 py-6 text-center cursor-pointer transition-all duration-150',
+              'group flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-center cursor-pointer transition-all duration-150',
               selected === v.id
                 ? 'border-[#008D3B] bg-[#ecfdf5] shadow-sm ring-1 ring-[#008D3B]/30'
                 : 'border-gray-200 bg-white hover:border-[#008D3B] hover:bg-[#f0fdf4]',
             )}
           >
-            <span className="text-4xl">{v.icon}</span>
-            <span className="text-[13px] font-semibold text-slate-800">{v.label}</span>
+            <img
+              src={v.img}
+              alt={v.label}
+              loading="eager"
+              fetchPriority="high"
+              className={cn(
+                'w-28 h-28 object-contain transition-all duration-200',
+                selected === v.id ? 'grayscale-0 scale-105' : 'grayscale group-hover:grayscale-0 group-hover:scale-110 group-hover:brightness-110',
+              )}
+            />
+            <span className="text-[15px] font-semibold text-slate-800">{v.label}</span>
           </button>
         ))}
       </div>
@@ -328,22 +339,29 @@ function StepVehicleCondition({ selected, onSelect, onBack }: { selected: string
       <StepHeader title="Is the vehicle New or Used?" sub="This helps us find the right lenders for your situation" />
       <div className="grid grid-cols-2 gap-3">
         {[
-          { id: 'new',  icon: '✨', label: 'New' },
-          { id: 'used', icon: '🔄', label: 'Used' },
+          { id: 'new',  img: '/new-car.png', label: 'New' },
+          { id: 'used', img: '/old-car.png', label: 'Used' },
         ].map(opt => (
           <button
             key={opt.id}
             type="button"
             onClick={() => onSelect(opt.id)}
             className={cn(
-              'flex flex-col items-center gap-2 rounded-xl border px-4 py-8 text-center cursor-pointer transition-all duration-150',
+              'group flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-center cursor-pointer transition-all duration-150',
               selected === opt.id
                 ? 'border-[#008D3B] bg-[#ecfdf5] shadow-sm ring-1 ring-[#008D3B]/30'
                 : 'border-gray-200 bg-white hover:border-[#008D3B] hover:bg-[#f0fdf4]',
             )}
           >
-            <span className="text-4xl">{opt.icon}</span>
-            <span className="text-sm font-semibold text-slate-800">{opt.label}</span>
+            <img
+              src={opt.img}
+              alt={opt.label}
+              className={cn(
+                'w-28 h-28 object-contain transition-all duration-200',
+                selected === opt.id ? 'grayscale-0 scale-105' : 'grayscale group-hover:grayscale-0 group-hover:scale-110 group-hover:brightness-110',
+              )}
+            />
+            <span className="text-[15px] font-semibold text-slate-800">{opt.label}</span>
           </button>
         ))}
       </div>

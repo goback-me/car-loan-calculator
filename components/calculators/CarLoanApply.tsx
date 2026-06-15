@@ -223,15 +223,26 @@ export default function CarLoanApply() {
           <span className="inline-flex items-center bg-[#008D3B] text-white rounded-full px-3 py-1 text-[10px] sm:text-[11px] font-bold tracking-widest uppercase">
             Find My Best Rate
           </span>
-          <span className="text-[11px] text-gray-400 font-medium">Step {step + 1} of {TOTAL_STEPS}</span>
         </div>
 
         {/* Progress bar */}
-        <div className="mx-4 sm:mx-6 mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div className="mx-4 sm:mx-6 mt-3 h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner">
           <div
-            className="h-full bg-gradient-to-r from-[#008D3B] to-[#00b84d] rounded-full transition-[width] duration-500 ease-out"
-            style={{ width: `${progress}%` }}
-          />
+            className="h-full rounded-full transition-[width] duration-500 ease-out relative overflow-hidden"
+            style={{
+              width: `${progress}%`,
+              background: 'linear-gradient(90deg, #005c26, #008D3B 60%, #00e064)',
+              boxShadow: '0 0 8px rgba(0,141,59,0.55)',
+            }}
+          >
+            {/* shimmer sweep */}
+            <span
+              className="absolute inset-0 animate-[shimmer_1.6s_linear_infinite]"
+              style={{
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.45) 50%, transparent 100%)',
+              }}
+            />
+          </div>
         </div>
 
         {/* Animated step content */}

@@ -14,22 +14,12 @@ const vehicleTypes = [
 ];
 
 const employmentTypes = [
-  { id: 'full-time',   label: 'Full-Time' },
-  { id: 'casual',      label: 'Casual' },
-  { id: 'part-time',   label: 'Part-Time' },
-  { id: 'retired',     label: 'Retired' },
-  { id: 'centrelink',  label: 'Centrelink' },
-  { id: 'abn',         label: 'ABN / Self-Employed' },
-  { id: 'unemployed',  label: 'Unemployed' },
+  { id: 'full-time',          label: 'Full-Time' },
+  { id: 'casual-parttime',    label: 'Casual / Part-Time' },
+  { id: 'retired-centrelink', label: 'Retired / Centrelink' },
+  { id: 'abn',                label: 'ABN / Self-Employed' },
 ];
 
-const incomeRanges = [
-  { id: 'under30k', label: 'Under $30,000',   disqualify: true  },
-  { id: '30-50k',   label: '$30,000–$49,999', disqualify: false },
-  { id: '50-70k',   label: '$50,000–$69,999', disqualify: false },
-  { id: '70-90k',   label: '$70,000–$89,999', disqualify: false },
-  { id: '90k+',     label: '$90,000+',        disqualify: false },
-];
 
 const residencyOptions = [
   { id: 'citizen', label: 'Australian Citizen' },
@@ -82,9 +72,9 @@ const EMPTY_FORM: FormState = {
   state: '', fullName: '', mobile: '', email: '',
 };
 
-/* ── Shared disqualify helper — marks user then redirects the top frame ── */
+/* ── Shared disqualify helper — redirects the top frame ── */
 function goAppreciated() {
-  try { localStorage.setItem('car_loan_disqualified', '1'); } catch {}
+  // try { localStorage.setItem('car_loan_disqualified', '1'); } catch {} // re-entry lock disabled
   (window.top || window).location.href = '/appreciated';
 }
 
@@ -99,20 +89,19 @@ export default function CarLoanApply() {
   const [showCreditPopup, setShowCreditPopup] = useState(false);
   const [contactErrors, setContactErrors]     = useState<Partial<Record<'fullName'|'mobile'|'email', string>>>({});
 
-  // If the user was previously disqualified, send them straight back.
-  // Also fires on bfcache restore (browser back button) via the pageshow event.
-  useEffect(() => {
-    function checkDisqualified() {
-      try {
-        if (localStorage.getItem('car_loan_disqualified') === '1') {
-          (window.top || window).location.href = '/appreciated';
-        }
-      } catch {}
-    }
-    checkDisqualified();
-    window.addEventListener('pageshow', checkDisqualified);
-    return () => window.removeEventListener('pageshow', checkDisqualified);
-  }, []);
+  // Re-entry lock disabled — uncomment to block disqualified users from re-opening the form
+  // useEffect(() => {
+  //   function checkDisqualified() {
+  //     try {
+  //       if (localStorage.getItem('car_loan_disqualified') === '1') {
+  //         (window.top || window).location.href = '/appreciated';
+  //       }
+  //     } catch {}
+  //   }
+  //   checkDisqualified();
+  //   window.addEventListener('pageshow', checkDisqualified);
+  //   return () => window.removeEventListener('pageshow', checkDisqualified);
+  // }, []);
 
   const set = useCallback(<K extends keyof FormState>(key: K, val: FormState[K]) =>
     setForm(f => ({ ...f, [key]: val })), []);
@@ -131,7 +120,7 @@ export default function CarLoanApply() {
 
   const pick = useCallback(<K extends keyof FormState>(key: K, val: FormState[K]) => {
     // ── Instant disqualifiers — no point collecting more data ──
-    if (key === 'employment' && (val === 'retired' || val === 'centrelink' || val === 'unemployed')) {
+    if (key === 'employment' && val === 'retired-centrelink') {
       goAppreciated();
       return;
     }
@@ -460,30 +449,72 @@ function StepEmployment({ selected, onSelect, onBack }: { selected: string; onSe
 }
 
 /* ── STEP 4: ANNUAL INCOME ── */
-function StepAnnualIncome({ selected, onSelect, onBack }: { selected: string; onSelect: (v: string) => void; onBack: () => void }) {
+const MIN_INCOME = 10000;
+const MAX_INCOME = 120000;
+
+function incomeToRangeId(v: number): string {
+  if (v < 30000)  return 'under30k';  // disqualified in pick()
+  if (v < 50000)  return '30-50k';
+  if (v < 70000)  return '50-70k';
+  if (v < 90000)  return '70-90k';
+  return '90k+';
+}
+
+function formatIncome(v: number): string {
+  if (v >= 120000) return '$120,000+';
+  return `$${v.toLocaleString()}`;
+}
+
+function incomeRangeLabel(v: number): string {
+  if (v < 30000)  return 'Under $30,000 — not eligible';
+  if (v < 50000)  return '$30,000 – $49,999';
+  if (v < 70000)  return '$50,000 – $69,999';
+  if (v < 90000)  return '$70,000 – $89,999';
+  return '$90,000+';
+}
+
+function StepAnnualIncome({ onSelect, onBack }: { selected: string; onSelect: (v: string) => void; onBack: () => void }) {
+  const [value, setValue] = useState(60000);
+  const pct = ((value - MIN_INCOME) / (MAX_INCOME - MIN_INCOME)) * 100;
+
   return (
     <div className="px-4 sm:px-6 py-5 sm:py-6">
       <StepHeader title="What's your annual income before tax?" sub="Used to match you with lenders suited to your income level" />
-      <div className="flex flex-col gap-2">
-        {incomeRanges.map(r => (
-          <button
-            key={r.id}
-            type="button"
-            onClick={() => onSelect(r.id)}
-            className={cn(
-              'w-full text-left rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-150',
-              selected === r.id
-                ? 'border-[#008D3B] bg-[#ecfdf5] text-[#008D3B] shadow-sm ring-1 ring-[#008D3B]/30'
-                : 'border-gray-200 text-slate-700 hover:border-[#008D3B] hover:bg-[#f0fdf4]',
-            )}
-          >
-            {r.label}
-          </button>
-        ))}
+
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-sm text-gray-500 font-medium">$10k</span>
+        <span className="text-2xl sm:text-3xl font-bold text-[#008D3B]">{formatIncome(value)}</span>
+        <span className="text-sm text-gray-500 font-medium">$120k+</span>
       </div>
-      <div className="mt-4">
-        <BackButton onClick={onBack}>Back</BackButton>
+      <p className="text-center text-xs text-gray-400 mb-5">{incomeRangeLabel(value)}</p>
+
+      <div className="relative mb-6">
+        <div className="relative h-2 bg-gray-100 rounded-full">
+          <div
+            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#008D3B] to-[#00b84d] rounded-full"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <input
+          type="range"
+          min={MIN_INCOME}
+          max={MAX_INCOME}
+          step={5000}
+          value={value}
+          onChange={e => setValue(Number(e.target.value))}
+          onMouseUp={() => onSelect(incomeToRangeId(value))}
+          onTouchEnd={() => onSelect(incomeToRangeId(value))}
+          className="absolute inset-0 w-full opacity-0 cursor-pointer h-2"
+          style={{ margin: 0 }}
+        />
+        <div
+          className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-[#008D3B] rounded-full shadow-md pointer-events-none"
+          style={{ left: `calc(${pct}% - 10px)` }}
+        />
       </div>
+
+      <p className="text-center text-[11px] text-gray-400 mb-2">Release the slider to continue</p>
+      <BackButton onClick={onBack}>Back</BackButton>
     </div>
   );
 }
@@ -744,10 +775,8 @@ function GSTPopup({ onComplete }: { onComplete: (gstRegistered: string, gstVerif
 
   function handleAbn(val: 'yes' | 'no') {
     setAbn(val);
-    setGst(null); // reset Q2 if they change Q1
-    if (val === 'no') {
-      goAppreciated();
-    }
+    setGst(null);
+    if (val === 'no') goAppreciated();
   }
 
   function handleContinue() {

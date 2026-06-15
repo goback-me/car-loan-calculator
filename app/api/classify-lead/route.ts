@@ -25,7 +25,7 @@ function classify(b: Body): Quality {
 
   // ── DISQUALIFY ───────────────────────────────────────────────
   // Retired or Centrelink
-  if (employment === 'retired' || employment === 'centrelink' || employment === 'unemployed') return 'disqualify';
+  if (employment === 'retired-centrelink') return 'disqualify';
   // Income too low
   if (annualIncome === 'under30k') return 'disqualify';
   // Visa holder
@@ -39,7 +39,7 @@ function classify(b: Body): Quality {
   // ABN but not GST registered
   if (employment === 'abn' && gstRegistered === 'no') return 'bad';
   // Casual or Part-Time employment
-  if (employment === 'casual' || employment === 'part-time') return 'bad';
+  if (employment === 'casual-parttime') return 'bad';
   // Income between $30k–$50k
   if (annualIncome === '30-50k') return 'bad';
   // Permanent Resident (not full citizen)

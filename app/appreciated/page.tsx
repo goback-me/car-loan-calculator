@@ -7,13 +7,6 @@ export default function AppreciatedPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-emerald-50 flex flex-col items-center justify-center px-4 py-12 font-sans">
 
-      {/* Logo */}
-      <div className="mb-8">
-        <span className="text-2xl font-extrabold tracking-tight">
-          <span className="text-emerald-500">Lenda</span><span className="text-gray-800">Link</span>
-        </span>
-      </div>
-
       {/* Main card */}
       <div className="w-full max-w-lg bg-white rounded-3xl shadow-[0_24px_60px_-8px_rgba(0,0,0,0.10)] ring-1 ring-black/5 overflow-hidden">
 
@@ -36,8 +29,6 @@ export default function AppreciatedPage() {
         
         </div>
       </div>
-
-      <p className="text-xs text-gray-400 mt-6">© LendaLink Finance. Australian Credit Licence holder.</p>
     </div>
   );
 }

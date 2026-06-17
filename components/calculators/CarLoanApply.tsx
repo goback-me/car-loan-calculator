@@ -221,8 +221,8 @@ export default function CarLoanApply() {
   if (isLoading) return <LoadingScreen />;
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-3 sm:px-4 py-6 sm:py-10 bg-gradient-to-br from-slate-50 via-white to-[#f0fdf4]">
-      <div className="w-full max-w-[560px] bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_32px_80px_-8px_rgba(0,0,0,0.10),0_8px_32px_-8px_rgba(0,141,59,0.07)] ring-1 ring-black/5">
+    <div className="w-full bg-white">
+      <div className="w-full bg-white overflow-hidden">
 
         <div className="h-1 bg-gradient-to-r from-[#008D3B] to-[#00b84d]" />
 

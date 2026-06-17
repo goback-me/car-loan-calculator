@@ -88,6 +88,26 @@ export default function CarLoanApply() {
   const [showCreditPopup, setShowCreditPopup] = useState(false);
   const [contactErrors, setContactErrors]     = useState<Partial<Record<'fullName'|'mobile'|'email', string>>>({});
 
+  // Iframe resize — mirrors IframeResizer in layout; self-contained so it fires
+  // on every step/popup change without relying solely on the global observer.
+  useEffect(() => {
+    if (typeof window === 'undefined' || window === window.parent) return;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    let timer: ReturnType<typeof setTimeout>;
+    const send = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const height = document.body.offsetHeight;
+        window.parent.postMessage({ type: 'calculator-resize', height }, '*');
+      }, 50);
+    };
+    const ro = new ResizeObserver(send);
+    ro.observe(document.body);
+    send();
+    return () => { ro.disconnect(); clearTimeout(timer); };
+  }, []);
+
   // Re-entry lock disabled — uncomment to block disqualified users from re-opening the form
   // useEffect(() => {
   //   function checkDisqualified() {
@@ -887,7 +907,7 @@ function LoadingScreen() {
 function StepHeader({ title, sub }: { title: string; sub: string }) {
   return (
     <div className="mb-4 sm:mb-5">
-      <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-1">{title}</h2>
+      <h2 className="font-heading text-lg sm:text-xl font-bold text-slate-900 mb-1">{title}</h2>
       <p className="text-xs sm:text-sm text-gray-400">{sub}</p>
     </div>
   );
@@ -900,7 +920,7 @@ function FireButton({ onClick, children, flex }: { onClick: () => void; children
       onClick={onClick}
       className={cn(
         'flex items-center justify-center rounded-xl bg-[#008D3B] text-white',
-        'font-bold text-[14px] sm:text-[15px] py-3.5 sm:py-4 mt-1.5',
+        'font-heading font-bold text-[14px] sm:text-[15px] py-3.5 sm:py-4 mt-1.5',
         'transition-all hover:bg-[#006b2c] active:scale-[0.98]',
         'hover:shadow-[0_8px_24px_-4px_rgba(0,141,59,0.45)]',
         flex ? 'flex-1' : 'w-full',

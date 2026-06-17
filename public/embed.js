@@ -5,12 +5,15 @@
   })();
 
   var base = script.src.replace(/\/embed\.js(\?.*)?$/, '');
-  var page = script.getAttribute('data-page') || '/car-loan';
-  var iframeUrl = base + page;
+  var defaultPage = script.getAttribute('data-page') || '/car-loan';
 
   function inject(placeholder) {
     if (placeholder.dataset.calcInjected) return;
     placeholder.dataset.calcInjected = '1';
+
+    var val = placeholder.getAttribute('data-calculator');
+    var page = (val && val !== '') ? '/' + val : defaultPage;
+    var iframeUrl = base + page;
 
     var iframe = document.createElement('iframe');
     iframe.src = iframeUrl;

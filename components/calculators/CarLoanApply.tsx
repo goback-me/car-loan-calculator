@@ -218,14 +218,14 @@ export default function CarLoanApply() {
         <div className="h-[2px] bg-gradient-to-r from-[#008D3B] to-[#00b84d]" />
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-5">
+        <div className="flex items-center justify-between px-4 sm:px-6 pt-3 sm:pt-4">
           <span className="inline-flex items-center bg-[#008D3B] text-white rounded-full px-3 py-1 text-[10px] sm:text-[11px] font-bold tracking-widest uppercase">
             Find My Best Rate
           </span>
         </div>
 
         {/* Progress bar */}
-        <div className="mx-4 sm:mx-6 mt-3 h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+        <div className="mx-4 sm:mx-6 mt-2 sm:mt-3 h-2 sm:h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner">
           <div
             className="h-full rounded-full transition-[width] duration-500 ease-out relative overflow-hidden"
             style={{
@@ -308,7 +308,7 @@ export default function CarLoanApply() {
 /* ── STEP 0: VEHICLE TYPE ── */
 function StepVehicleType({ selected, onSelect }: { selected: string; onSelect: (v: string) => void }) {
   return (
-    <div className="px-4 sm:px-6 py-5 sm:py-6">
+    <div className="px-3 sm:px-6 py-3 sm:py-5">
       <StepHeader title="What type of vehicle are you looking to buy?" sub="Select the vehicle type you want to finance" />
       <div className="grid grid-cols-2 gap-3">
         {vehicleTypes.map(v => (
@@ -329,7 +329,7 @@ function StepVehicleType({ selected, onSelect }: { selected: string; onSelect: (
               loading="eager"
               fetchPriority="high"
               className={cn(
-                'w-28 h-28 object-contain transition-all duration-200',
+                'w-20 h-20 sm:w-28 sm:h-28 object-contain transition-all duration-200',
                 selected === v.id ? 'scale-105' : 'group-hover:scale-110',
               )}
             />
@@ -345,7 +345,7 @@ function StepVehicleType({ selected, onSelect }: { selected: string; onSelect: (
 /* ── STEP 1: NEW OR USED ── */
 function StepVehicleCondition({ selected, onSelect, onBack }: { selected: string; onSelect: (v: string) => void; onBack: () => void }) {
   return (
-    <div className="px-4 sm:px-6 py-5 sm:py-6">
+    <div className="px-3 sm:px-6 py-3 sm:py-5">
       <StepHeader title="Is the vehicle New or Used?" sub="This helps us find the right lenders for your situation" />
       <div className="grid grid-cols-2 gap-3">
         {[
@@ -367,7 +367,7 @@ function StepVehicleCondition({ selected, onSelect, onBack }: { selected: string
               src={opt.img}
               alt={opt.label}
               className={cn(
-                'w-28 h-28 object-contain transition-all duration-200',
+                'w-20 h-20 sm:w-28 sm:h-28 object-contain transition-all duration-200',
                 selected === opt.id ? 'scale-105' : 'group-hover:scale-110',
               )}
             />
@@ -389,16 +389,16 @@ function StepPurchasePrice({ value, onChange, onNext, onBack }: {
   const pct = ((value - MIN_PRICE) / (MAX_PRICE - MIN_PRICE)) * 100;
 
   return (
-    <div className="px-4 sm:px-6 py-5 sm:py-6">
+    <div className="px-3 sm:px-6 py-3 sm:py-5">
       <StepHeader title="What's the purchase price of the vehicle?" sub="Drag the slider to select the approximate price" />
 
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-sm text-gray-500 font-medium">${MIN_PRICE.toLocaleString()}</span>
-        <span className="text-2xl sm:text-3xl font-bold text-[#008D3B]">${value.toLocaleString()}</span>
-        <span className="text-sm text-gray-500 font-medium">${(MAX_PRICE / 1000).toFixed(0)}k</span>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs sm:text-sm text-gray-500 font-medium">${MIN_PRICE.toLocaleString()}</span>
+        <span className="text-xl sm:text-3xl font-bold text-[#008D3B]">${value.toLocaleString()}</span>
+        <span className="text-xs sm:text-sm text-gray-500 font-medium">${(MAX_PRICE / 1000).toFixed(0)}k</span>
       </div>
 
-      <div className="relative mb-6">
+      <div className="relative mb-4 sm:mb-6">
         <div className="relative h-2 bg-gray-100 rounded-full">
           <div
             className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#008D3B] to-[#00b84d] rounded-full"
@@ -432,7 +432,7 @@ function StepPurchasePrice({ value, onChange, onNext, onBack }: {
 /* ── STEP 3: EMPLOYMENT ── */
 function StepEmployment({ selected, onSelect, onBack }: { selected: string; onSelect: (v: string) => void; onBack: () => void }) {
   return (
-    <div className="px-4 sm:px-6 py-5 sm:py-6">
+    <div className="px-3 sm:px-6 py-3 sm:py-5">
       <StepHeader title="What's your employment status?" sub="Lenders assess eligibility based on your employment type" />
       <div className="flex flex-col gap-2">
         {employmentTypes.map(e => {
@@ -443,7 +443,7 @@ function StepEmployment({ selected, onSelect, onBack }: { selected: string; onSe
               type="button"
               onClick={() => onSelect(e.id)}
               className={cn(
-                'w-full text-left rounded-xl border px-4 py-3 transition-all duration-150 flex items-center gap-3',
+                'w-full text-left rounded-xl border px-3 py-2.5 sm:py-3 transition-all duration-150 flex items-center gap-3',
                 active
                   ? 'border-[#008D3B] bg-[#ecfdf5] shadow-sm ring-1 ring-[#008D3B]/30'
                   : 'border-gray-200 bg-white hover:border-[#008D3B] hover:bg-[#f0fdf4]',
@@ -493,17 +493,17 @@ function StepAnnualIncome({ onSelect, onBack }: { selected: string; onSelect: (v
   const pct = ((value - MIN_INCOME) / (MAX_INCOME - MIN_INCOME)) * 100;
 
   return (
-    <div className="px-4 sm:px-6 py-5 sm:py-6">
+    <div className="px-3 sm:px-6 py-3 sm:py-5">
       <StepHeader title="What's your annual income before tax?" sub="Used to match you with lenders suited to your income level" />
 
       <div className="flex items-center justify-between mb-1">
-        <span className="text-sm text-gray-500 font-medium">$10k</span>
-        <span className="text-2xl sm:text-3xl font-bold text-[#008D3B]">{formatIncome(value)}</span>
-        <span className="text-sm text-gray-500 font-medium">$120k+</span>
+        <span className="text-xs sm:text-sm text-gray-500 font-medium">$10k</span>
+        <span className="text-xl sm:text-3xl font-bold text-[#008D3B]">{formatIncome(value)}</span>
+        <span className="text-xs sm:text-sm text-gray-500 font-medium">$120k+</span>
       </div>
-      <p className="text-center text-xs text-gray-400 mb-5">{incomeRangeLabel(value)}</p>
+      <p className="text-center text-xs text-gray-400 mb-3 sm:mb-5">{incomeRangeLabel(value)}</p>
 
-      <div className="relative mb-6">
+      <div className="relative mb-4 sm:mb-6">
         <div className="relative h-2 bg-gray-100 rounded-full">
           <div
             className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#008D3B] to-[#00b84d] rounded-full"
@@ -537,7 +537,7 @@ function StepAnnualIncome({ onSelect, onBack }: { selected: string; onSelect: (v
 /* ── STEP 5: RESIDENCY ── */
 function StepResidency({ selected, onSelect, onBack }: { selected: string; onSelect: (v: string) => void; onBack: () => void }) {
   return (
-    <div className="px-4 sm:px-6 py-5 sm:py-6">
+    <div className="px-3 sm:px-6 py-3 sm:py-5">
       <StepHeader title="What's your residency status?" sub="Helps us match you with the right lenders" />
       <div className="flex flex-col gap-2">
         {residencyOptions.map(r => {
@@ -548,7 +548,7 @@ function StepResidency({ selected, onSelect, onBack }: { selected: string; onSel
               type="button"
               onClick={() => onSelect(r.id)}
               className={cn(
-                'w-full text-left rounded-xl border px-4 py-3 transition-all duration-150 flex items-center gap-3',
+                'w-full text-left rounded-xl border px-3 py-2.5 sm:py-3 transition-all duration-150 flex items-center gap-3',
                 active
                   ? 'border-[#008D3B] bg-[#ecfdf5] shadow-sm ring-1 ring-[#008D3B]/30'
                   : 'border-gray-200 bg-white hover:border-[#008D3B] hover:bg-[#f0fdf4]',
@@ -574,7 +574,7 @@ function StepResidency({ selected, onSelect, onBack }: { selected: string; onSel
 /* ── STEP 6: CREDIT HISTORY ── */
 function StepCreditHistory({ selected, onSelect, onBack }: { selected: string; onSelect: (v: string) => void; onBack: () => void }) {
   return (
-    <div className="px-4 sm:px-6 py-5 sm:py-6">
+    <div className="px-3 sm:px-6 py-3 sm:py-5">
       <StepHeader title="How would you rate your credit history?" sub="Approximate is fine — this helps match the right lenders" />
       <div className="flex flex-col gap-2">
         {creditOptions.map(c => {
@@ -585,7 +585,7 @@ function StepCreditHistory({ selected, onSelect, onBack }: { selected: string; o
               type="button"
               onClick={() => onSelect(c.id)}
               className={cn(
-                'w-full text-left rounded-xl border px-4 py-3 transition-all duration-150 flex items-center gap-3',
+                'w-full text-left rounded-xl border px-3 py-2.5 sm:py-3 transition-all duration-150 flex items-center gap-3',
                 active
                   ? 'border-[#008D3B] bg-[#ecfdf5] shadow-sm ring-1 ring-[#008D3B]/30'
                   : 'border-gray-200 bg-white hover:border-[#008D3B] hover:bg-[#f0fdf4]',
@@ -608,7 +608,7 @@ function StepCreditHistory({ selected, onSelect, onBack }: { selected: string; o
 /* ── STEP 7: STATE ── */
 function StepState({ selected, onSelect, onBack }: { selected: string; onSelect: (v: string) => void; onBack: () => void }) {
   return (
-    <div className="px-4 sm:px-6 py-5 sm:py-6">
+    <div className="px-3 sm:px-6 py-3 sm:py-5">
       <StepHeader title="Which state are you located in?" sub="Helps connect you with lenders in your area" />
       <div className="grid grid-cols-4 gap-2">
         {AU_STATES.map(s => (
@@ -645,10 +645,10 @@ interface ContactProps {
 
 function StepContact({ form, set, errors, onSubmit, onBack }: ContactProps) {
   return (
-    <div className="px-4 sm:px-6 py-5 sm:py-6">
+    <div className="px-3 sm:px-6 py-3 sm:py-5">
       <StepHeader title="Almost there!" sub="Enter your details to see your personalised results" />
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2 sm:gap-3">
         <div>
           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Full Name</label>
           <Input
@@ -686,7 +686,7 @@ function StepContact({ form, set, errors, onSubmit, onBack }: ContactProps) {
         </div>
       </div>
 
-      <div className="flex gap-2.5 mt-5">
+      <div className="flex gap-2.5 mt-3 sm:mt-5">
         <BackButton onClick={onBack}>Back</BackButton>
         <FireButton onClick={onSubmit} flex>Submit</FireButton>
       </div>
@@ -897,9 +897,9 @@ function LoadingScreen() {
 /* ── SHARED UI ── */
 function StepHeader({ title, sub }: { title: string; sub: string }) {
   return (
-    <div className="mb-4 sm:mb-5">
-      <h2 className="font-sans text-lg sm:text-xl font-bold text-slate-900 mb-1">{title}</h2>
-      <p className="font-sans text-xs sm:text-sm text-gray-400">{sub}</p>
+    <div className="mb-3 sm:mb-4">
+      <h2 className="font-sans text-base sm:text-xl font-bold text-slate-900 mb-0.5">{title}</h2>
+      <p className="font-sans text-[11px] sm:text-sm text-gray-400">{sub}</p>
     </div>
   );
 }

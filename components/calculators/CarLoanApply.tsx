@@ -92,10 +92,10 @@ export default function CarLoanApply() {
   // alongside the global IframeResizer MutationObserver.
   useEffect(() => {
     if (typeof window === 'undefined' || window === window.parent) return;
-    const height = Math.max(
-      document.body.scrollHeight,
-      document.documentElement.scrollHeight,
-    );
+    // Use body.scrollHeight only — documentElement.scrollHeight returns the
+    // iframe viewport height when html has no overflow set, which causes the
+    // iframe to never shrink when navigating to a shorter step.
+    const height = document.body.scrollHeight;
     window.parent.postMessage({ type: 'calculator-resize', height }, '*');
   }, [step, showGSTPopup, showCreditPopup, isLoading]);
 

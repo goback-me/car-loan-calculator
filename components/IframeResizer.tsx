@@ -5,8 +5,11 @@ export default function IframeResizer() {
   useEffect(() => {
     if (typeof window === 'undefined' || window === window.parent) return;
 
-    // Prevent scrollbars appearing inside the iframe while it's being sized.
-    document.documentElement.style.overflow = 'hidden';
+    // Only hide overflow on body, NOT on html/documentElement.
+    // If html also has overflow:hidden its height is locked to the iframe
+    // viewport, so documentElement.scrollHeight returns the iframe height
+    // instead of the content height — making the iframe never shrink when
+    // navigating to a shorter step.
     document.body.style.overflow = 'hidden';
 
     let timer: ReturnType<typeof setTimeout>;
@@ -15,27 +18,20 @@ export default function IframeResizer() {
     const send = () => {
       clearTimeout(timer);
       timer = setTimeout(() => {
-        // scrollHeight gives the true content height even when overflow is
-        // hidden — offsetHeight was returning the clamped viewport height,
-        // which cut off content on small mobile screens.
-        const height = Math.max(
-          document.body.scrollHeight,
-          document.documentElement.scrollHeight,
-        );
+        // body grows and shrinks with its content when html is unconstrained,
+        // so body.scrollHeight is always the true content height.
+        const height = document.body.scrollHeight;
         if (height === lastHeight) return;
         lastHeight = height;
         window.parent.postMessage({ type: 'calculator-resize', height }, '*');
       }, 50);
     };
 
-    // ResizeObserver — fires when the body's rendered size changes (initial
-    // load, orientation change, font swap, etc.)
     const ro = new ResizeObserver(send);
     ro.observe(document.body);
 
-    // MutationObserver — fires when steps mount/unmount or popups open.
-    // Needed because overflow:hidden prevents the body's rendered size from
-    // changing on content growth, so ResizeObserver alone misses step changes.
+    // MutationObserver catches step transitions and popup open/close where
+    // the body's rendered size may not change but its content does.
     const mo = new MutationObserver(send);
     mo.observe(document.body, { childList: true, subtree: true });
 

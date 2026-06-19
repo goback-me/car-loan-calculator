@@ -37,8 +37,8 @@ export async function POST(req: NextRequest) {
   // Run Supabase insert and webhook in parallel
   const [dbResult, webhookResult] = await Promise.allSettled([
     supabase.from('apply_submissions').insert(row),
-    process.env.WEBHOOK_URL
-      ? fetch(process.env.WEBHOOK_URL, {
+    process.env.WEBHOOK_URL_QUIZ
+      ? fetch(process.env.WEBHOOK_URL_QUIZ, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(webhookPayload),

@@ -122,15 +122,31 @@ export default function CarLoanCalculator() {
     if (!form.email || !form.email.includes('@')) e.email = 'Valid email required';
     setErrors(e);
     if (Object.keys(e).length > 0) return;
+
+    const currentRate  = parseFloat(form.currentRate);
+    const termYears    = parseFloat(form.remTerm);
+    const savings      = calcSavings(parseFloat(form.remBal), currentRate, MARKET_RATE, termYears);
+    const roastGrade   = getRoastGrade(currentRate);
+    const monthlyDiff  = savings > 0 ? Math.round(savings / (termYears * 12)) : 0;
+    const rateGap      = (currentRate - MARKET_RATE).toFixed(2);
+
+    // Fire-and-forget: save to DB + webhook
+    fetch('/api/submit-calculator', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...form,
+        savings,
+        monthlyDiff,
+        grade:      roastGrade.grade,
+        gradeLabel: roastGrade.label,
+        marketRate: MARKET_RATE,
+        rateGap,
+      }),
+    }).catch(() => {});
+
     setIsLoading(true);
     setTimeout(() => {
-      const currentRate  = parseFloat(form.currentRate);
-      const termYears    = parseFloat(form.remTerm);
-      const savings      = calcSavings(parseFloat(form.remBal), currentRate, MARKET_RATE, termYears);
-      const roastGrade   = getRoastGrade(currentRate);
-      const monthlyDiff  = savings > 0 ? Math.round(savings / (termYears * 12)) : 0;
-      const rateGap      = (currentRate - MARKET_RATE).toFixed(2);
-
       const params = new URLSearchParams({
         firstName:   form.firstName,
         lastName:    form.lastName,

@@ -10,33 +10,36 @@ export async function POST(req: NextRequest) {
     'unknown';
 
   const row = {
-    vehicle_type:      body.vehicleType,
-    vehicle_condition: body.vehicleCondition,
-    purchase_price:    body.purchasePrice,
+    loan_amount:       body.loanAmt,
+    current_rate:      body.currentRate,
+    remaining_balance: body.remBal,
+    remaining_term:    body.remTerm,
+    loan_source:       body.loanSource,
     employment:        body.employment,
-    gst_registered:    body.gstRegistered,
-    gst_verified:      body.gstVerified,
-    annual_income:     body.annualIncome,
-    residency:         body.residency,
-    credit_history:    body.creditHistory,
-    has_defaults:      body.hasDefaults,
-    in_payment_plan:   body.inPaymentPlan,
+    income:            body.income,
     state:             body.state,
-    full_name:         body.fullName,
-    mobile:            body.mobile,
+    first_name:        body.firstName,
+    last_name:         body.lastName,
+    phone:             body.phone,
     email:             body.email,
+    savings:           body.savings,
+    monthly_diff:      body.monthlyDiff,
+    grade:             body.grade,
+    grade_label:       body.gradeLabel,
+    market_rate:       body.marketRate,
+    rate_gap:          body.rateGap,
     ip,
   };
 
   const webhookPayload = {
     ...row,
     submitted_at: new Date().toISOString(),
-    source: 'apply-form',
+    source: 'rate-roast-calculator',
   };
 
   // Run Supabase insert and webhook in parallel
   const [dbResult, webhookResult] = await Promise.allSettled([
-    supabase.from('apply_submissions').insert(row),
+    supabase.from('calculator_submissions').insert(row),
     process.env.WEBHOOK_URL
       ? fetch(process.env.WEBHOOK_URL, {
           method: 'POST',
@@ -50,7 +53,7 @@ export async function POST(req: NextRequest) {
     const msg = dbResult.status === 'rejected'
       ? dbResult.reason
       : dbResult.value.error?.message;
-    console.error('apply_submissions insert error:', msg);
+    console.error('calculator_submissions insert error:', msg);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 

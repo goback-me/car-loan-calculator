@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iframe Resize Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #f0f0f0; padding: 16px; }
+
+    .controls {
+      background: #1e293b;
+      color: #fff;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      font-size: 13px;
+    }
+    .controls label { font-weight: 600; color: #94a3b8; }
+    .controls select, .controls input[type=range] { accent-color: #22c55e; }
+    .controls input[type=range] { width: 160px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+    .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+    .badge .dot.warn { background: #f59e0b; }
+    .badge .dot.err  { background: #ef4444; }
+
+    .container {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+      transition: width 0.3s ease;
+    }
+
+    iframe {
+      width: 100%;
+      display: block;
+      border: none;
+      transition: height 0.2s ease;
+      min-height: 500px;
+    }
+
+    .log {
+      margin-top: 16px;
+      background: #0f172a;
+      color: #94a3b8;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 12px;
+      font-family: monospace;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .log .entry { padding: 2px 0; border-bottom: 1px solid #1e293b; }
+    .log .entry.new { color: #22c55e; }
+  </style>
+</head>
+<body>
+
+<div class="controls">
+  <span>
+    <label>Page: </label>
+    <select id="pageSelect" onchange="switchPage()">
+      <option value="/apply">Apply Form (/apply)</option>
+      <option value="/car-loan">Rate Roast (/car-loan)</option>
+    </select>
+  </span>
+
+  <span>
+    <label>Container width: </label>
+    <input type="range" id="widthRange" min="280" max="900" value="420" oninput="setWidth(this.value)" />
+    <span id="widthLabel">420px</span>
+  </span>
+
+  <span class="badge">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusText">waiting…</span>
+  </span>
+
+  <span class="badge" style="color:#fff">
+    iframe h: <strong id="iframeH">—</strong>
+  </span>
+
+  <button onclick="clearLog()" style="margin-left:auto;background:#334155;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px">Clear log</button>
+</div>
+
+<div class="container" id="container">
+  <iframe id="calcIframe" scrolling="no" allowtransparency="true"></iframe>
+</div>
+
+<div class="log" id="log"><div class="entry">— log starts here —</div></div>
+
+<script>
+  var iframe   = document.getElementById('calcIframe');
+  var logEl    = document.getElementById('log');
+  var dot      = document.getElementById('statusDot');
+  var statusTx = document.getElementById('statusText');
+  var iframeH  = document.getElementById('iframeH');
+  var msgCount = 0;
+
+  function switchPage() {
+    var page = document.getElementById('pageSelect').value;
+    var base = window.location.origin;
+    iframe.src = base + page;
+    iframe.style.height = '500px';
+    addLog('navigated to ' + page, 'new');
+  }
+
+  function setWidth(val) {
+    document.getElementById('container').style.maxWidth = val + 'px';
+    document.getElementById('widthLabel').textContent = val + 'px';
+    addLog('container width → ' + val + 'px');
+  }
+
+  function addLog(msg, cls) {
+    var d = document.createElement('div');
+    d.className = 'entry' + (cls ? ' ' + cls : '');
+    d.textContent = new Date().toLocaleTimeString() + '  ' + msg;
+    logEl.prepend(d);
+    // keep last 60 entries
+    while (logEl.children.length > 60) logEl.removeChild(logEl.lastChild);
+  }
+
+  function clearLog() { logEl.innerHTML = ''; }
+
+  window.addEventListener('message', function (e) {
+    if (!e.data || e.data.type !== 'calculator-resize') return;
+    var h = e.data.height;
+    msgCount++;
+
+    iframe.style.height = h + 'px';
+    iframeH.textContent = h + 'px';
+
+    dot.className = 'dot';
+    statusTx.textContent = 'resize #' + msgCount + ' → ' + h + 'px';
+    addLog('calculator-resize → ' + h + 'px', 'new');
+
+    // warn if height looks clipped (suspiciously round / viewport-sized)
+    if (h <= window.innerHeight && h % 100 === 0) {
+      dot.className = 'dot warn';
+      addLog('  ⚠ height looks like viewport — may be clipped');
+    }
+  });
+
+  // Boot on the apply form by default
+  switchPage();
+</script>
+</body>
+</html>

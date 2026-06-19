@@ -88,25 +88,16 @@ export default function CarLoanApply() {
   const [showCreditPopup, setShowCreditPopup] = useState(false);
   const [contactErrors, setContactErrors]     = useState<Partial<Record<'fullName'|'mobile'|'email', string>>>({});
 
-  // Iframe resize — mirrors IframeResizer in layout; self-contained so it fires
-  // on every step/popup change without relying solely on the global observer.
+  // Explicit resize ping on every step/popup state change — belt-and-suspenders
+  // alongside the global IframeResizer MutationObserver.
   useEffect(() => {
     if (typeof window === 'undefined' || window === window.parent) return;
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-    let timer: ReturnType<typeof setTimeout>;
-    const send = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        const height = document.body.offsetHeight;
-        window.parent.postMessage({ type: 'calculator-resize', height }, '*');
-      }, 50);
-    };
-    const ro = new ResizeObserver(send);
-    ro.observe(document.body);
-    send();
-    return () => { ro.disconnect(); clearTimeout(timer); };
-  }, []);
+    const height = Math.max(
+      document.body.scrollHeight,
+      document.documentElement.scrollHeight,
+    );
+    window.parent.postMessage({ type: 'calculator-resize', height }, '*');
+  }, [step, showGSTPopup, showCreditPopup, isLoading]);
 
   // Re-entry lock disabled — uncomment to block disqualified users from re-opening the form
   // useEffect(() => {
@@ -224,7 +215,7 @@ export default function CarLoanApply() {
     <div className="w-full bg-white">
       <div className="w-full bg-white overflow-hidden">
 
-        <div className="h-1 bg-gradient-to-r from-[#008D3B] to-[#00b84d]" />
+        <div className="h-[2px] bg-gradient-to-r from-[#008D3B] to-[#00b84d]" />
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-5">
@@ -907,8 +898,8 @@ function LoadingScreen() {
 function StepHeader({ title, sub }: { title: string; sub: string }) {
   return (
     <div className="mb-4 sm:mb-5">
-      <h2 className="font-heading text-lg sm:text-xl font-bold text-slate-900 mb-1">{title}</h2>
-      <p className="text-xs sm:text-sm text-gray-400">{sub}</p>
+      <h2 className="font-sans text-lg sm:text-xl font-bold text-slate-900 mb-1">{title}</h2>
+      <p className="font-sans text-xs sm:text-sm text-gray-400">{sub}</p>
     </div>
   );
 }

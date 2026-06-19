@@ -35,12 +35,6 @@ const creditOptions = [
 
 const AU_STATES = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
 
-const LOADING_MSGS = [
-  'Matching you with lenders...',
-  'Checking your eligibility...',
-  'Comparing 20+ lenders...',
-  'Preparing your personalised results...',
-];
 
 const MIN_PRICE = 10000;
 const MAX_PRICE = 200000;
@@ -870,26 +864,107 @@ function GSTPopup({ onComplete }: { onComplete: (gstRegistered: string, gstVerif
   );
 }
 
-/* ── LOADING ── */
-function LoadingScreen() {
-  const [msg, setMsg] = useState(LOADING_MSGS[0]);
-  useEffect(() => {
-    let i = 0;
-    const t = setInterval(() => { i = (i + 1) % LOADING_MSGS.length; setMsg(LOADING_MSGS[i]); }, 550);
-    return () => clearInterval(t);
-  }, []);
+/* ── CONFETTI PIECES ── */
+const CONFETTI_COLORS = ['#008D3B','#00e064','#FFD700','#FF6B35','#4A90D9','#C850C0','#E74C3C','#F39C12','#00b4d8'];
+const CONFETTI_COUNT  = 56;
+
+// Deterministic pseudo-random so no hydration mismatch
+function pr(seed: number, mod: number) {
+  return ((seed * 1664525 + 1013904223) >>> 0) % mod;
+}
+
+function ConfettiPiece({ i }: { i: number }) {
+  const left     = pr(i * 7,  100);          // 0–99%
+  const delay    = pr(i * 13, 2000) / 1000;  // 0–2s
+  const dur      = 1800 + pr(i * 17, 1400);  // 1.8–3.2s
+  const size     = 6 + pr(i * 11, 7);        // 6–12px
+  const color    = CONFETTI_COLORS[pr(i * 3, CONFETTI_COLORS.length)];
+  const isCircle = pr(i * 19, 3) === 0;
+  const rot      = pr(i * 23, 360);
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-slate-50 via-white to-[#f0fdf4]">
-      <div className="flex flex-col items-center gap-5">
-        <span className="w-12 h-12 rounded-full border-4 border-[#008D3B] border-t-transparent animate-spin inline-block" />
-        <p className="text-sm text-gray-500 font-medium">{msg}</p>
-        <div className="flex gap-1.5">
-          {[0, 1, 2].map(i => (
-            <span key={i} className="w-2 h-2 rounded-full bg-[#008D3B] inline-block"
-              style={{ animation: `bounce-dot 0.8s ease-in-out ${i * 0.15}s infinite` }} />
-          ))}
-        </div>
+    <span style={{
+      position: 'absolute',
+      left: `${left}%`,
+      top: '-12px',
+      width: size,
+      height: isCircle ? size : size * 0.5,
+      background: color,
+      borderRadius: isCircle ? '50%' : '2px',
+      opacity: 0,
+      transform: `rotate(${rot}deg)`,
+      animation: `confetti-fall ${dur}ms ease-in ${delay}s infinite`,
+    }} />
+  );
+}
+
+/* ── LOADING / CELEBRATION ── */
+function LoadingScreen() {
+  return (
+    <div style={{ position: 'relative', overflow: 'hidden', minHeight: '420px',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', padding: '32px 24px',
+      background: 'linear-gradient(135deg,#f0fdf4 0%,#fff 60%,#f0fdf4 100%)' }}>
+
+      <style>{`
+        @keyframes confetti-fall {
+          0%   { transform: translateY(0)   rotate(0deg)   scaleX(1); opacity: 1; }
+          80%  { opacity: 1; }
+          100% { transform: translateY(520px) rotate(720deg) scaleX(-1); opacity: 0; }
+        }
+        @keyframes pop-in {
+          0%   { transform: scale(0.4); opacity: 0; }
+          70%  { transform: scale(1.15); }
+          100% { transform: scale(1);   opacity: 1; }
+        }
+        @keyframes fade-up {
+          from { transform: translateY(14px); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
+        }
+        @keyframes pulse-ring {
+          0%,100% { box-shadow: 0 0 0 0   rgba(0,141,59,0.35); }
+          50%     { box-shadow: 0 0 0 12px rgba(0,141,59,0); }
+        }
+      `}</style>
+
+      {/* Confetti layer */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+        {Array.from({ length: CONFETTI_COUNT }, (_, i) => <ConfettiPiece key={i} i={i} />)}
       </div>
+
+      {/* Emoji */}
+      <div style={{ fontSize: 64, lineHeight: 1, marginBottom: 16,
+        animation: 'pop-in 0.6s cubic-bezier(.17,.67,.45,1.4) forwards' }}>
+        🎉
+      </div>
+
+      {/* Heading */}
+      <h2 style={{ fontFamily: 'sans-serif', fontWeight: 800, fontSize: 22,
+        color: '#008D3B', textAlign: 'center', margin: '0 0 8px',
+        animation: 'fade-up 0.5s ease 0.25s both' }}>
+        Congratulations!
+      </h2>
+
+      {/* Subheading */}
+      <p style={{ fontFamily: 'sans-serif', fontSize: 15, fontWeight: 500,
+        color: '#374151', textAlign: 'center', maxWidth: 260, margin: '0 0 28px',
+        lineHeight: 1.45, animation: 'fade-up 0.5s ease 0.4s both' }}>
+        You&rsquo;re about to get a <span style={{ color: '#008D3B', fontWeight: 700 }}>better rate</span> on your car loan.
+      </p>
+
+      {/* Spinner */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+        animation: 'fade-up 0.5s ease 0.55s both' }}>
+        <span style={{ width: 32, height: 32, borderRadius: '50%',
+          border: '3px solid #008D3B', borderTopColor: 'transparent',
+          display: 'inline-block', animation: 'spin 0.8s linear infinite',
+          animationName: 'spin' }} />
+        <p style={{ fontSize: 12, color: '#9ca3af', fontFamily: 'sans-serif' }}>
+          Finding your best lenders…
+        </p>
+      </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

@@ -181,7 +181,7 @@ export default function CarLoanApply() {
     }).catch(() => null);
 
     const { redirectUrl } = (res?.ok ? await res.json() : null) ?? {
-      redirectUrl: 'https://aizall53.sg-host.com/result/',
+      redirectUrl: 'https://tryrevvy.com.au/thank-you-appreciated/',
     };
 
     setTimeout(() => {

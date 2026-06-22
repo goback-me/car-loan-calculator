@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { ChevronDownIcon } from 'lucide-react';
 
 /* ── CONSTANTS ── */
-const DISQUALIFY  = '/appreciated';
+const DISQUALIFY  = 'https://tryrevvy.com.au/appreciated/';
 const MIN_LOAN    = 10000;
 const MAX_LOAN    = 100000;
 const STEP_LABELS = ['Loan Details', 'About You', 'Credit Score', 'Your Details'];

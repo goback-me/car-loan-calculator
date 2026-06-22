@@ -68,7 +68,7 @@ const EMPTY_FORM: FormState = {
 /* ── Shared disqualify helper — redirects the top frame ── */
 function goAppreciated() {
   // try { localStorage.setItem('car_loan_disqualified', '1'); } catch {} // re-entry lock disabled
-  (window.top || window).location.href = '/appreciated';
+  (window.top || window).location.href = 'https://tryrevvy.com.au/appreciated/';
 }
 
 /* ── MAIN ── */
@@ -98,7 +98,7 @@ export default function CarLoanApply() {
   //   function checkDisqualified() {
   //     try {
   //       if (localStorage.getItem('car_loan_disqualified') === '1') {
-  //         (window.top || window).location.href = '/appreciated';
+  //         (window.top || window).location.href = 'https://tryrevvy.com.au/appreciated/';
   //       }
   //     } catch {}
   //   }

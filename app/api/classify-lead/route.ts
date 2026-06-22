@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // ── Redirect URLs ─────────────────────────────────────────────
 // Update BAD_URL once the second landing page is live
-const DISQUALIFY_URL = '/appreciated';
-const GOOD_URL       = 'https://aizall53.sg-host.com/result/';
-const BAD_URL        = 'https://aizall53.sg-host.com/result-bad/';
+const DISQUALIFY_URL = 'https://tryrevvy.com.au/appreciated/';
+const GOOD_URL       = 'https://tryrevvy.com.au/thank-you-appreciated/';
+const BAD_URL        = 'https://tryrevvy.com.au/thank-you/';
 
 type Quality = 'disqualify' | 'bad' | 'good';
 

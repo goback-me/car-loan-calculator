@@ -90,16 +90,22 @@ export default function CarLoanApply() {
   const [showCreditPopup, setShowCreditPopup] = useState(false);
   const [contactErrors, setContactErrors]     = useState<Partial<Record<'fullName'|'mobile'|'email', string>>>({});
 
-  // Explicit resize ping on every step/popup state change — belt-and-suspenders
-  // alongside the global IframeResizer MutationObserver.
+  // Keep iframe height in sync — fires on every content/image resize, not just step changes
   useEffect(() => {
     if (typeof window === 'undefined' || window === window.parent) return;
-    // Use body.scrollHeight only — documentElement.scrollHeight returns the
-    // iframe viewport height when html has no overflow set, which causes the
-    // iframe to never shrink when navigating to a shorter step.
-    const height = document.body.scrollHeight;
-    window.parent.postMessage({ type: 'calculator-resize', height }, '*');
-  }, [step, showGSTPopup, showCreditPopup, isLoading]);
+    let timer: ReturnType<typeof setTimeout>;
+    const send = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const height = document.body.scrollHeight;
+        window.parent.postMessage({ type: 'calculator-resize', height }, '*');
+      }, 50);
+    };
+    const ro = new ResizeObserver(send);
+    ro.observe(document.body);
+    send();
+    return () => { ro.disconnect(); clearTimeout(timer); };
+  }, []);
 
   // Capture UTM params + page_url forwarded by embed.js via the iframe src query string
   useEffect(() => {

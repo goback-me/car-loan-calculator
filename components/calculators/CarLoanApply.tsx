@@ -417,7 +417,7 @@ function StepPurchasePrice({ value, onChange, onNext, onBack }: {
         />
       </div>
 
-      <p className="text-center text-[11px] text-gray-400 mt-1 mb-2">Release the slider to continue</p>
+      <p className="text-center text-[11px] text-gray-700 mt-1 mb-2">Release the slider to continue 💡</p>
       <BackButton onClick={onBack}>Back</BackButton>
     </div>
   );
@@ -522,7 +522,7 @@ function StepAnnualIncome({ onSelect, onBack }: { selected: string; onSelect: (v
         />
       </div>
 
-      <p className="text-center text-[11px] text-gray-400 mb-2">Release the slider to continue</p>
+      <p className="text-center text-[11px] text-gray-700 mb-2">Release the slider to continue 💡</p>
       <BackButton onClick={onBack}>Back</BackButton>
     </div>
   );

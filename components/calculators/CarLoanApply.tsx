@@ -359,7 +359,7 @@ function StepVehicleType({ selected, onSelect }: { selected: string; onSelect: (
           </button>
         ))}
       </div>
-      <p className="text-center text-[11px] text-gray-400 mt-4">No credit check ✅ Free service 🎉</p>
+      <p className="text-center text-[11px] text-gray-400 mt-4 mb-2">No credit check ✅ Free service 🎉</p>
     </div>
   );
 }

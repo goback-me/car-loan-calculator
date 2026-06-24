@@ -234,8 +234,8 @@ export default function CarLoanApply() {
   if (isLoading) return <LoadingScreen />;
 
   return (
-    <div className="w-full bg-white">
-      <div className="w-full bg-white overflow-hidden">
+    <div className="w-full bg-white pb-4">
+      <div className="w-full bg-white">
 
         <div className="h-[2px] bg-gradient-to-r from-[#008D3B] to-[#00b84d]" />
 

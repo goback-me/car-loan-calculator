@@ -56,6 +56,13 @@ interface FormState {
   fullName: string;
   mobile: string;
   email: string;
+  // tracking
+  utmSource: string;
+  utmMedium: string;
+  utmCampaign: string;
+  utmTerm: string;
+  utmContent: string;
+  pageUrl: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -63,6 +70,7 @@ const EMPTY_FORM: FormState = {
   employment: '', gstRegistered: '', gstVerified: '', annualIncome: '',
   residency: '', creditHistory: '', hasDefaults: '', inPaymentPlan: '',
   state: '', fullName: '', mobile: '', email: '',
+  utmSource: '', utmMedium: '', utmCampaign: '', utmTerm: '', utmContent: '', pageUrl: '',
 };
 
 /* ── Shared disqualify helper — redirects the top frame ── */
@@ -92,6 +100,20 @@ export default function CarLoanApply() {
     const height = document.body.scrollHeight;
     window.parent.postMessage({ type: 'calculator-resize', height }, '*');
   }, [step, showGSTPopup, showCreditPopup, isLoading]);
+
+  // Capture UTM params + page_url forwarded by embed.js via the iframe src query string
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    setForm(f => ({
+      ...f,
+      utmSource:   p.get('utm_source')   ?? '',
+      utmMedium:   p.get('utm_medium')   ?? '',
+      utmCampaign: p.get('utm_campaign') ?? '',
+      utmTerm:     p.get('utm_term')     ?? '',
+      utmContent:  p.get('utm_content')  ?? '',
+      pageUrl:     p.get('page_url')     ?? '',
+    }));
+  }, []);
 
   // Re-entry lock disabled — uncomment to block disqualified users from re-opening the form
   // useEffect(() => {

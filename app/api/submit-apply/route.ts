@@ -26,6 +26,12 @@ export async function POST(req: NextRequest) {
     mobile:            body.mobile,
     email:             body.email,
     ip,
+    utm_source:        body.utmSource   || null,
+    utm_medium:        body.utmMedium   || null,
+    utm_campaign:      body.utmCampaign || null,
+    utm_term:          body.utmTerm     || null,
+    utm_content:       body.utmContent  || null,
+    page_url:          body.pageUrl     || null,
   };
 
   const webhookPayload = {

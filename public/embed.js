@@ -7,13 +7,26 @@
   var base = script.src.replace(/\/embed\.js(\?.*)?$/, '');
   var defaultPage = script.getAttribute('data-page') || '/car-loan';
 
+  // Collect UTM params + page_url from the parent window
+  function buildUtmQuery() {
+    var src = new URLSearchParams(window.location.search);
+    var fwd = new URLSearchParams();
+    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(function (k) {
+      var v = src.get(k);
+      if (v) fwd.set(k, v);
+    });
+    fwd.set('page_url', window.location.href);
+    return fwd.toString();
+  }
+
   function inject(placeholder) {
     if (placeholder.dataset.calcInjected) return;
     placeholder.dataset.calcInjected = '1';
 
     var val = placeholder.getAttribute('data-calculator');
     var page = (val && val !== '') ? '/' + val : defaultPage;
-    var iframeUrl = base + page;
+    var qs = buildUtmQuery();
+    var iframeUrl = base + page + (qs ? '?' + qs : '');
 
     var iframe = document.createElement('iframe');
     iframe.src = iframeUrl;

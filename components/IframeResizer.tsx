@@ -12,6 +12,11 @@ export default function IframeResizer() {
     // navigating to a shorter step.
     document.body.style.overflow = 'hidden';
 
+    // The layout sets min-h-full on <body>, which forces body height to at
+    // least the iframe viewport height. That adds white space below short
+    // steps on mobile. Zero it out when running inside an iframe.
+    document.body.style.minHeight = '0';
+
     let timer: ReturnType<typeof setTimeout>;
     let lastHeight = 0;
 

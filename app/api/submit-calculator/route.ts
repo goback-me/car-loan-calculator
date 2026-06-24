@@ -29,6 +29,12 @@ export async function POST(req: NextRequest) {
     market_rate:       body.marketRate,
     rate_gap:          body.rateGap,
     ip,
+    utm_source:        body.utmSource   || null,
+    utm_medium:        body.utmMedium   || null,
+    utm_campaign:      body.utmCampaign || null,
+    utm_term:          body.utmTerm     || null,
+    utm_content:       body.utmContent  || null,
+    page_url:          body.pageUrl     || null,
   };
 
   const webhookPayload = {

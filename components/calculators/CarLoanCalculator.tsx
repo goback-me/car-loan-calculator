@@ -34,6 +34,8 @@ interface FormState {
   loanAmt: string; currentRate: string; remBal: string; remTerm: string;
   loanSource: string; employment: string; income: string; state: string;
   firstName: string; lastName: string; phone: string; email: string;
+  // tracking
+  utmSource: string; utmMedium: string; utmCampaign: string; utmTerm: string; utmContent: string; pageUrl: string;
 }
 
 type Errors = Partial<Record<keyof FormState, string>>;
@@ -42,6 +44,7 @@ const EMPTY_FORM: FormState = {
   loanAmt: '', currentRate: '', remBal: '', remTerm: '',
   loanSource: '', employment: '', income: '', state: '',
   firstName: '', lastName: '', phone: '', email: '',
+  utmSource: '', utmMedium: '', utmCampaign: '', utmTerm: '', utmContent: '', pageUrl: '',
 };
 
 /* ── SHARED COMPONENT TYPES ── */
@@ -64,6 +67,18 @@ export default function CarLoanCalculator() {
 
   const set = (key: keyof FormState, val: string) => setForm(f => ({ ...f, [key]: val }));
 
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    setForm(f => ({
+      ...f,
+      utmSource:   p.get('utm_source')   ?? '',
+      utmMedium:   p.get('utm_medium')   ?? '',
+      utmCampaign: p.get('utm_campaign') ?? '',
+      utmTerm:     p.get('utm_term')     ?? '',
+      utmContent:  p.get('utm_content')  ?? '',
+      pageUrl:     p.get('page_url')     ?? '',
+    }));
+  }, []);
 
   function goNext() {
     setAnimDir('forward');

@@ -261,7 +261,7 @@ export default function CarLoanApply() {
         </div>
 
         {/* Animated step content */}
-        <div className="overflow-hidden">
+        <div>
           <div
             className="transition-[opacity,transform] duration-[250ms] ease-in-out"
             style={{

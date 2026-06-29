@@ -75,7 +75,7 @@ const EMPTY_FORM: FormState = {
 
 /* ── Shared disqualify helper — redirects the top frame ── */
 function goAppreciated() {
-  // try { localStorage.setItem('car_loan_disqualified', '1'); } catch {} // re-entry lock disabled
+  try { localStorage.setItem('car_loan_disqualified', '1'); } catch {}
   (window.top || window).location.href = 'https://tryrevvy.com.au/appreciated/';
 }
 
@@ -121,19 +121,19 @@ export default function CarLoanApply() {
     }));
   }, []);
 
-  // Re-entry lock disabled — uncomment to block disqualified users from re-opening the form
-  // useEffect(() => {
-  //   function checkDisqualified() {
-  //     try {
-  //       if (localStorage.getItem('car_loan_disqualified') === '1') {
-  //         (window.top || window).location.href = 'https://tryrevvy.com.au/appreciated/';
-  //       }
-  //     } catch {}
-  //   }
-  //   checkDisqualified();
-  //   window.addEventListener('pageshow', checkDisqualified);
-  //   return () => window.removeEventListener('pageshow', checkDisqualified);
-  // }, []);
+  // Re-entry lock — blocks disqualified users from re-opening the form
+  useEffect(() => {
+    function checkDisqualified() {
+      try {
+        if (localStorage.getItem('car_loan_disqualified') === '1') {
+          (window.top || window).location.href = 'https://tryrevvy.com.au/appreciated/';
+        }
+      } catch {}
+    }
+    checkDisqualified();
+    window.addEventListener('pageshow', checkDisqualified);
+    return () => window.removeEventListener('pageshow', checkDisqualified);
+  }, []);
 
   const set = useCallback(<K extends keyof FormState>(key: K, val: FormState[K]) =>
     setForm(f => ({ ...f, [key]: val })), []);

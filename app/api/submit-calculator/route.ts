@@ -43,16 +43,22 @@ export async function POST(req: NextRequest) {
     source: 'rate-roast-calculator',
   };
 
-  // Run Supabase insert and webhook in parallel
-  const [dbResult, webhookResult] = await Promise.allSettled([
+  // Comma-separated list of webhook URLs — split, trim, drop empties
+  const webhookUrls = (process.env.WEBHOOK_URL || '')
+    .split(',')
+    .map(u => u.trim())
+    .filter(Boolean);
+
+  // Run Supabase insert and all webhooks in parallel
+  const [dbResult, ...webhookResults] = await Promise.allSettled([
     supabase.from('calculator_submissions').insert(row),
-    process.env.WEBHOOK_URL
-      ? fetch(process.env.WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(webhookPayload),
-        })
-      : Promise.resolve(null),
+    ...webhookUrls.map(url =>
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(webhookPayload),
+      })
+    ),
   ]);
 
   if (dbResult.status === 'rejected' || (dbResult.status === 'fulfilled' && dbResult.value.error)) {
@@ -63,9 +69,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 
-  if (webhookResult.status === 'rejected') {
-    console.error('webhook delivery failed:', webhookResult.reason);
-  }
+  webhookResults.forEach((r, i) => {
+    if (r.status === 'rejected') console.error(`webhook delivery failed (${webhookUrls[i]}):`, r.reason);
+  });
 
   return NextResponse.json({ ok: true });
 }

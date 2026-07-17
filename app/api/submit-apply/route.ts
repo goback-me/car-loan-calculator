@@ -31,6 +31,12 @@ export async function POST(req: NextRequest) {
     utm_campaign:      body.utmCampaign || null,
     utm_term:          body.utmTerm     || null,
     utm_content:       body.utmContent  || null,
+    utm_adset:         body.utmAdset    || null,
+    utm_ad:            body.utmAd       || null,
+    lead_source:       body.leadSource  || null,
+    campaign:          body.campaign    || null,
+    adset:             body.adset       || null,
+    ad_name:           body.adName      || null,
     page_url:          body.pageUrl     || null,
   };
 

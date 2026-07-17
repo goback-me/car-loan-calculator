@@ -35,7 +35,9 @@ interface FormState {
   loanSource: string; employment: string; income: string; state: string;
   firstName: string; lastName: string; phone: string; email: string;
   // tracking
-  utmSource: string; utmMedium: string; utmCampaign: string; utmTerm: string; utmContent: string; pageUrl: string;
+  utmSource: string; utmMedium: string; utmCampaign: string; utmTerm: string; utmContent: string;
+  utmAdset: string; utmAd: string; leadSource: string; campaign: string; adset: string; adName: string;
+  pageUrl: string;
 }
 
 type Errors = Partial<Record<keyof FormState, string>>;
@@ -44,7 +46,8 @@ const EMPTY_FORM: FormState = {
   loanAmt: '', currentRate: '', remBal: '', remTerm: '',
   loanSource: '', employment: '', income: '', state: '',
   firstName: '', lastName: '', phone: '', email: '',
-  utmSource: '', utmMedium: '', utmCampaign: '', utmTerm: '', utmContent: '', pageUrl: '',
+  utmSource: '', utmMedium: '', utmCampaign: '', utmTerm: '', utmContent: '',
+  utmAdset: '', utmAd: '', leadSource: '', campaign: '', adset: '', adName: '', pageUrl: '',
 };
 
 /* ── SHARED COMPONENT TYPES ── */
@@ -76,6 +79,12 @@ export default function CarLoanCalculator() {
       utmCampaign: p.get('utm_campaign') ?? '',
       utmTerm:     p.get('utm_term')     ?? '',
       utmContent:  p.get('utm_content')  ?? '',
+      utmAdset:    p.get('utm_adset')    ?? '',
+      utmAd:       p.get('utm_ad')       ?? '',
+      leadSource:  p.get('lead_source')  ?? '',
+      campaign:    p.get('campaign')     ?? '',
+      adset:       p.get('adset')        ?? '',
+      adName:      p.get('ad_name')      ?? '',
       pageUrl:     p.get('page_url')     ?? '',
     }));
   }, []);

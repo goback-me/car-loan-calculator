@@ -62,6 +62,12 @@ interface FormState {
   utmCampaign: string;
   utmTerm: string;
   utmContent: string;
+  utmAdset: string;
+  utmAd: string;
+  leadSource: string;
+  campaign: string;
+  adset: string;
+  adName: string;
   pageUrl: string;
 }
 
@@ -70,12 +76,12 @@ const EMPTY_FORM: FormState = {
   employment: '', gstRegistered: '', gstVerified: '', annualIncome: '',
   residency: '', creditHistory: '', hasDefaults: '', inPaymentPlan: '',
   state: '', fullName: '', mobile: '', email: '',
-  utmSource: '', utmMedium: '', utmCampaign: '', utmTerm: '', utmContent: '', pageUrl: '',
+  utmSource: '', utmMedium: '', utmCampaign: '', utmTerm: '', utmContent: '',
+  utmAdset: '', utmAd: '', leadSource: '', campaign: '', adset: '', adName: '', pageUrl: '',
 };
 
 /* ── Shared disqualify helper — redirects the top frame ── */
 function goAppreciated() {
-  try { localStorage.setItem('car_loan_disqualified', '1'); } catch {}
   (window.top || window).location.href = 'https://tryrevvy.com.au/appreciated/';
 }
 
@@ -117,6 +123,12 @@ export default function CarLoanApply() {
       utmCampaign: p.get('utm_campaign') ?? '',
       utmTerm:     p.get('utm_term')     ?? '',
       utmContent:  p.get('utm_content')  ?? '',
+      utmAdset:    p.get('utm_adset')    ?? '',
+      utmAd:       p.get('utm_ad')       ?? '',
+      leadSource:  p.get('lead_source')  ?? '',
+      campaign:    p.get('campaign')     ?? '',
+      adset:       p.get('adset')        ?? '',
+      adName:      p.get('ad_name')      ?? '',
       pageUrl:     p.get('page_url')     ?? '',
     }));
   }, []);

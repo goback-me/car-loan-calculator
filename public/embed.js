@@ -11,7 +11,10 @@
   function buildUtmQuery() {
     var src = new URLSearchParams(window.location.search);
     var fwd = new URLSearchParams();
-    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(function (k) {
+    [
+      'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+      'utm_adset', 'utm_ad', 'lead_source', 'campaign', 'adset', 'ad_name',
+    ].forEach(function (k) {
       var v = src.get(k);
       if (v) fwd.set(k, v);
     });

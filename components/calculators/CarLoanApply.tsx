@@ -35,6 +35,21 @@ const creditOptions = [
 
 const AU_STATES = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
 
+const STEP_LABELS = [
+  'Vehicle Type', 'Vehicle Condition', 'Purchase Price', 'Employment',
+  'Annual Income', 'Residency', 'Credit History', 'State', 'Contact',
+];
+
+declare global {
+  interface Window {
+    fpEmbedTrack?: {
+      formStart: () => void;
+      questionView: (index: number, id: string, label: string) => void;
+      formSubmit: () => void;
+    };
+  }
+}
+
 
 const MIN_PRICE = 10000;
 const MAX_PRICE = 200000;
@@ -132,6 +147,14 @@ export default function CarLoanApply() {
       pageUrl:     p.get('page_url')     ?? '',
     }));
   }, []);
+
+  // Manual funnel tracking for embed-track.js — this form mounts/unmounts each
+  // step instead of toggling a persistent .step/.active class, so the script's
+  // auto-detect mode can't see step changes; call its API directly instead.
+  useEffect(() => {
+    if (step === 0) window.fpEmbedTrack?.formStart();
+    window.fpEmbedTrack?.questionView(step, `step-${step}`, STEP_LABELS[step]);
+  }, [step]);
 
   // Re-entry lock — blocks disqualified users from re-opening the form
   useEffect(() => {

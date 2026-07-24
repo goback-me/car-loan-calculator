@@ -42,7 +42,9 @@ export async function POST(req: NextRequest) {
 
   const webhookPayload = {
     ...row,
-    submitted_at: new Date().toISOString(),
+    // Sydney local time — toISOString() is UTC and rolls the date back a day
+    // for anything submitted in the early-morning AEDT/AEST hours.
+    submitted_at: new Date().toLocaleString('sv-SE', { timeZone: 'Australia/Sydney' }).replace(' ', 'T'),
     source: 'apply-form',
   };
 

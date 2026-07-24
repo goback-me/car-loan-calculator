@@ -95,8 +95,9 @@ const EMPTY_FORM: FormState = {
   utmAdset: '', utmAd: '', leadSource: '', campaign: '', adset: '', adName: '', pageUrl: '',
 };
 
-/* ── Shared disqualify helper — redirects the top frame ── */
+/* ── Shared disqualify helper — locks re-entry, then redirects the top frame ── */
 function goAppreciated() {
+  try { localStorage.setItem('car_loan_disqualified', '1'); } catch {}
   (window.top || window).location.href = 'https://tryrevvy.com.au/appreciated/';
 }
 
@@ -108,7 +109,6 @@ export default function CarLoanApply() {
   const [isLoading, setIsLoading]       = useState(false);
   const [form, setForm]                 = useState<FormState>(EMPTY_FORM);
   const [showGSTPopup, setShowGSTPopup]       = useState(false);
-  const [showCreditPopup, setShowCreditPopup] = useState(false);
   const [contactErrors, setContactErrors]     = useState<Partial<Record<'fullName'|'mobile'|'email', string>>>({});
 
   // Keep iframe height in sync — fires on every content/image resize, not just step changes
@@ -199,16 +199,15 @@ export default function CarLoanApply() {
       goAppreciated();
       return;
     }
+    if (key === 'creditHistory' && val === 'bad') {
+      goAppreciated();
+      return;
+    }
 
     // ── Popups that collect extra data (API decides from here) ──
     if (key === 'employment' && val === 'abn') {
       setForm(f => ({ ...f, [key]: val }));
       setShowGSTPopup(true);
-      return;
-    }
-    if (key === 'creditHistory' && val === 'bad') {
-      setForm(f => ({ ...f, [key]: val }));
-      setShowCreditPopup(true);
       return;
     }
 
@@ -254,12 +253,6 @@ export default function CarLoanApply() {
 
   const progress = useMemo(() => ((step + 1) / TOTAL_STEPS) * 100, [step]);
 
-  const onCreditComplete = useCallback((hasDefaults: string, inPaymentPlan: string) => {
-    setForm(f => ({ ...f, hasDefaults, inPaymentPlan }));
-    setShowCreditPopup(false);
-    goNext();
-  }, [goNext]);
-
   const onGSTComplete = useCallback((gstRegistered: string, gstVerified: string) => {
     setForm(f => ({ ...f, gstRegistered, gstVerified }));
     setShowGSTPopup(false);
@@ -272,11 +265,11 @@ export default function CarLoanApply() {
     <div className="w-full bg-white pb-8">
       <div className="w-full bg-white">
 
-        <div className="h-[2px] bg-gradient-to-r from-[#008D3B] to-[#00b84d]" />
+        <div className="h-[2px] bg-gradient-to-r from-[#7a9a00] to-[#bcee01]" />
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 pt-3 sm:pt-4">
-          <span className="inline-flex items-center bg-[#008D3B] text-white rounded-full px-3 py-1 text-[10px] sm:text-[11px] font-bold tracking-widest uppercase">
+          <span className="inline-flex items-center bg-[#bcee01] text-slate-900 rounded-full px-3 py-1 text-[10px] sm:text-[11px] font-bold tracking-widest uppercase">
             Find My Best Rate
           </span>
         </div>
@@ -287,8 +280,8 @@ export default function CarLoanApply() {
             className="h-full rounded-full transition-[width] duration-500 ease-out relative overflow-hidden"
             style={{
               width: `${progress}%`,
-              background: 'linear-gradient(90deg, #005c26, #008D3B 60%, #00e064)',
-              boxShadow: '0 0 8px rgba(0,141,59,0.55)',
+              background: 'linear-gradient(90deg, #7a9a00, #bcee01 60%, #d4ff33)',
+              boxShadow: '0 0 8px rgba(188,238,1,0.55)',
             }}
           >
             {/* shimmer sweep */}
@@ -349,11 +342,6 @@ export default function CarLoanApply() {
         </div>
       </div>
 
-      {/* Credit Popup — collects defaults data; API decides qualification */}
-      {showCreditPopup && (
-        <CreditPopup onComplete={onCreditComplete} />
-      )}
-
       {/* GST Popup — collects GST data; API decides qualification */}
       {showGSTPopup && (
         <GSTPopup onComplete={onGSTComplete} />
@@ -376,8 +364,8 @@ function StepVehicleType({ selected, onSelect }: { selected: string; onSelect: (
             className={cn(
               'group flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-center cursor-pointer transition-all duration-150',
               selected === v.id
-                ? 'border-[#008D3B] bg-[#ecfdf5] shadow-sm ring-1 ring-[#008D3B]/30'
-                : 'border-gray-200 bg-white hover:border-[#008D3B] hover:bg-[#f0fdf4]',
+                ? 'border-[#bcee01] bg-[#f9ffd9] shadow-sm ring-1 ring-[#bcee01]/40'
+                : 'border-gray-200 bg-white hover:border-[#bcee01] hover:bg-[#fbffe8]',
             )}
           >
             <img
@@ -416,8 +404,8 @@ function StepVehicleCondition({ selected, onSelect, onBack }: { selected: string
             className={cn(
               'group flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-center cursor-pointer transition-all duration-150',
               selected === opt.id
-                ? 'border-[#008D3B] bg-[#ecfdf5] shadow-sm ring-1 ring-[#008D3B]/30'
-                : 'border-gray-200 bg-white hover:border-[#008D3B] hover:bg-[#f0fdf4]',
+                ? 'border-[#bcee01] bg-[#f9ffd9] shadow-sm ring-1 ring-[#bcee01]/40'
+                : 'border-gray-200 bg-white hover:border-[#bcee01] hover:bg-[#fbffe8]',
             )}
           >
             <img
@@ -451,14 +439,14 @@ function StepPurchasePrice({ value, onChange, onNext, onBack }: {
 
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs sm:text-sm text-gray-500 font-medium">${MIN_PRICE.toLocaleString()}</span>
-        <span className="text-xl sm:text-3xl font-bold text-[#008D3B]">${value.toLocaleString()}</span>
+        <span className="text-xl sm:text-3xl font-bold text-[#7a9a00]">${value.toLocaleString()}</span>
         <span className="text-xs sm:text-sm text-gray-500 font-medium">${(MAX_PRICE / 1000).toFixed(0)}k</span>
       </div>
 
       <div className="relative mb-4 sm:mb-6">
         <div className="relative h-2 bg-gray-100 rounded-full">
           <div
-            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#008D3B] to-[#00b84d] rounded-full"
+            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#7a9a00] to-[#bcee01] rounded-full"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -475,7 +463,7 @@ function StepPurchasePrice({ value, onChange, onNext, onBack }: {
           style={{ margin: 0 }}
         />
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-[#008D3B] rounded-full shadow-md pointer-events-none"
+          className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-[#bcee01] rounded-full shadow-md pointer-events-none"
           style={{ left: `calc(${pct}% - 10px)` }}
         />
       </div>
@@ -502,13 +490,13 @@ function StepEmployment({ selected, onSelect, onBack }: { selected: string; onSe
               className={cn(
                 'w-full text-left rounded-xl border px-3 py-2.5 sm:py-3 transition-all duration-150 flex items-center gap-3',
                 active
-                  ? 'border-[#008D3B] bg-[#ecfdf5] shadow-sm ring-1 ring-[#008D3B]/30'
-                  : 'border-gray-200 bg-white hover:border-[#008D3B] hover:bg-[#f0fdf4]',
+                  ? 'border-[#bcee01] bg-[#f9ffd9] shadow-sm ring-1 ring-[#bcee01]/40'
+                  : 'border-gray-200 bg-white hover:border-[#bcee01] hover:bg-[#fbffe8]',
               )}
             >
               <span className="text-2xl leading-none shrink-0">{e.emoji}</span>
-              <span className={cn('flex-1 text-sm font-semibold', active ? 'text-[#008D3B]' : 'text-slate-700')}>{e.label}</span>
-              {active && <span className="w-5 h-5 rounded-full bg-[#008D3B] flex items-center justify-center shrink-0"><svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span>}
+              <span className={cn('flex-1 text-sm font-semibold', active ? 'text-[#7a9a00]' : 'text-slate-700')}>{e.label}</span>
+              {active && <span className="w-5 h-5 rounded-full bg-[#bcee01] flex items-center justify-center shrink-0"><svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="#1a2e05" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span>}
             </button>
           );
         })}
@@ -555,7 +543,7 @@ function StepAnnualIncome({ onSelect, onBack }: { selected: string; onSelect: (v
 
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs sm:text-sm text-gray-500 font-medium">$10k</span>
-        <span className="text-xl sm:text-3xl font-bold text-[#008D3B]">{formatIncome(value)}</span>
+        <span className="text-xl sm:text-3xl font-bold text-[#7a9a00]">{formatIncome(value)}</span>
         <span className="text-xs sm:text-sm text-gray-500 font-medium">$120k+</span>
       </div>
       <p className="text-center text-xs text-gray-400 mb-3 sm:mb-5">{incomeRangeLabel(value)}</p>
@@ -563,7 +551,7 @@ function StepAnnualIncome({ onSelect, onBack }: { selected: string; onSelect: (v
       <div className="relative mb-4 sm:mb-6">
         <div className="relative h-2 bg-gray-100 rounded-full">
           <div
-            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#008D3B] to-[#00b84d] rounded-full"
+            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#7a9a00] to-[#bcee01] rounded-full"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -580,7 +568,7 @@ function StepAnnualIncome({ onSelect, onBack }: { selected: string; onSelect: (v
           style={{ margin: 0 }}
         />
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-[#008D3B] rounded-full shadow-md pointer-events-none"
+          className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-[#bcee01] rounded-full shadow-md pointer-events-none"
           style={{ left: `calc(${pct}% - 10px)` }}
         />
       </div>
@@ -607,16 +595,16 @@ function StepResidency({ selected, onSelect, onBack }: { selected: string; onSel
               className={cn(
                 'w-full text-left rounded-xl border px-3 py-2.5 sm:py-3 transition-all duration-150 flex items-center gap-3',
                 active
-                  ? 'border-[#008D3B] bg-[#ecfdf5] shadow-sm ring-1 ring-[#008D3B]/30'
-                  : 'border-gray-200 bg-white hover:border-[#008D3B] hover:bg-[#f0fdf4]',
+                  ? 'border-[#bcee01] bg-[#f9ffd9] shadow-sm ring-1 ring-[#bcee01]/40'
+                  : 'border-gray-200 bg-white hover:border-[#bcee01] hover:bg-[#fbffe8]',
               )}
             >
               {r.img
                 ? <img src={r.img} alt={r.label} className="w-7 h-7 object-contain shrink-0 rounded-sm" />
                 : <span className="text-2xl leading-none shrink-0">{r.emoji}</span>
               }
-              <span className={cn('flex-1 text-sm font-semibold', active ? 'text-[#008D3B]' : 'text-slate-700')}>{r.label}</span>
-              {active && <span className="w-5 h-5 rounded-full bg-[#008D3B] flex items-center justify-center shrink-0"><svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span>}
+              <span className={cn('flex-1 text-sm font-semibold', active ? 'text-[#7a9a00]' : 'text-slate-700')}>{r.label}</span>
+              {active && <span className="w-5 h-5 rounded-full bg-[#bcee01] flex items-center justify-center shrink-0"><svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="#1a2e05" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span>}
             </button>
           );
         })}
@@ -644,13 +632,13 @@ function StepCreditHistory({ selected, onSelect, onBack }: { selected: string; o
               className={cn(
                 'w-full text-left rounded-xl border px-3 py-2.5 sm:py-3 transition-all duration-150 flex items-center gap-3',
                 active
-                  ? 'border-[#008D3B] bg-[#ecfdf5] shadow-sm ring-1 ring-[#008D3B]/30'
-                  : 'border-gray-200 bg-white hover:border-[#008D3B] hover:bg-[#f0fdf4]',
+                  ? 'border-[#bcee01] bg-[#f9ffd9] shadow-sm ring-1 ring-[#bcee01]/40'
+                  : 'border-gray-200 bg-white hover:border-[#bcee01] hover:bg-[#fbffe8]',
               )}
             >
               <span className="text-2xl leading-none shrink-0">{c.emoji}</span>
-              <span className={cn('flex-1 text-sm font-semibold', active ? 'text-[#008D3B]' : 'text-slate-700')}>{c.label}</span>
-              {active && <span className="w-5 h-5 rounded-full bg-[#008D3B] flex items-center justify-center shrink-0"><svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span>}
+              <span className={cn('flex-1 text-sm font-semibold', active ? 'text-[#7a9a00]' : 'text-slate-700')}>{c.label}</span>
+              {active && <span className="w-5 h-5 rounded-full bg-[#bcee01] flex items-center justify-center shrink-0"><svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="#1a2e05" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span>}
             </button>
           );
         })}
@@ -676,8 +664,8 @@ function StepState({ selected, onSelect, onBack }: { selected: string; onSelect:
             className={cn(
               'rounded-xl border py-3 text-sm font-semibold text-center transition-all duration-150',
               selected === s
-                ? 'border-[#008D3B] bg-[#ecfdf5] text-[#008D3B] shadow-sm ring-1 ring-[#008D3B]/30'
-                : 'border-gray-200 text-slate-700 hover:border-[#008D3B] hover:bg-[#f0fdf4]',
+                ? 'border-[#bcee01] bg-[#f9ffd9] text-[#7a9a00] shadow-sm ring-1 ring-[#bcee01]/40'
+                : 'border-gray-200 text-slate-700 hover:border-[#bcee01] hover:bg-[#fbffe8]',
             )}
           >
             {s}
@@ -754,101 +742,6 @@ function StepContact({ form, set, errors, onSubmit, onBack }: ContactProps) {
   );
 }
 
-/* ── CREDIT POPUP ── */
-function CreditPopup({ onComplete }: { onComplete: (hasDefaults: string, inPaymentPlan: string) => void }) {
-  const [hasDefaults, setHasDefaults]     = useState<'yes' | 'no' | null>(null);
-  const [inPaymentPlan, setInPaymentPlan] = useState<'yes' | 'no' | null>(null);
-
-  const showPaymentPlan = hasDefaults === 'yes';
-  const canContinue     = hasDefaults === 'no' || (hasDefaults === 'yes' && inPaymentPlan !== null);
-
-  function handleContinue() {
-    if (!canContinue) return;
-    // Has defaults but NOT managing them → disqualify immediately
-    if (hasDefaults === 'yes' && inPaymentPlan === 'no') {
-      goAppreciated();
-      return;
-    }
-    // Has defaults + in payment plan → bad quality lead, continue
-    // No defaults → normal, continue
-    onComplete(hasDefaults ?? '', inPaymentPlan ?? '');
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 animate-in fade-in zoom-in-95 duration-200">
-        <h3 className="text-lg font-bold text-slate-900 mb-1">A few more questions</h3>
-        <p className="text-sm text-[#008D3B] mb-6">
-          Please answer these quick questions about your credit history.
-        </p>
-
-        {/* Q1 */}
-        <p className="text-sm font-semibold text-slate-800 mb-3">Do You Have Any Defaults?</p>
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          {(['yes', 'no'] as const).map(opt => (
-            <button
-              key={opt}
-              type="button"
-              onClick={() => { setHasDefaults(opt); if (opt === 'no') setInPaymentPlan(null); }}
-              className={cn(
-                'rounded-xl border py-3 text-sm font-semibold transition-all duration-150',
-                hasDefaults === opt
-                  ? 'border-[#008D3B] bg-[#ecfdf5] text-[#008D3B] ring-1 ring-[#008D3B]/30'
-                  : 'border-gray-200 text-slate-700 hover:border-[#008D3B] hover:bg-[#f0fdf4]',
-              )}
-            >
-              {opt === 'yes' ? 'Yes' : 'No'}
-            </button>
-          ))}
-        </div>
-
-        {/* Q2 — revealed when defaults = Yes */}
-        <div
-          className={cn(
-            'overflow-hidden transition-all duration-300 ease-in-out',
-            showPaymentPlan ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0',
-          )}
-        >
-          <p className="text-sm font-semibold text-slate-800 mb-3">Are They In Payment Plans?</p>
-          <div className="grid grid-cols-2 gap-3 mb-5">
-            {(['yes', 'no'] as const).map(opt => (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => setInPaymentPlan(opt)}
-                className={cn(
-                  'rounded-xl border py-3 text-sm font-semibold transition-all duration-150',
-                  inPaymentPlan === opt
-                    ? 'border-[#008D3B] bg-[#ecfdf5] text-[#008D3B] ring-1 ring-[#008D3B]/30'
-                    : 'border-gray-200 text-slate-700 hover:border-[#008D3B] hover:bg-[#f0fdf4]',
-                )}
-              >
-                {opt === 'yes' ? 'Yes' : 'No'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={handleContinue}
-            disabled={!canContinue}
-            className={cn(
-              'rounded-xl px-6 py-3 text-sm font-bold text-white transition-all duration-150',
-              canContinue
-                ? 'bg-[#008D3B] hover:bg-[#006b2c] hover:shadow-[0_8px_24px_-4px_rgba(0,141,59,0.45)] active:scale-[0.98]'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed',
-            )}
-          >
-            Continue
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ── GST POPUP ── */
 function GSTPopup({ onComplete }: { onComplete: (gstRegistered: string, gstVerified: string) => void }) {
   const [abn, setAbn] = useState<'yes' | 'no' | null>(null);
@@ -872,15 +765,15 @@ function GSTPopup({ onComplete }: { onComplete: (gstRegistered: string, gstVerif
   const btnCls = (selected: 'yes' | 'no' | null, opt: 'yes' | 'no') => cn(
     'rounded-xl border py-3 text-sm font-semibold transition-all duration-150',
     selected === opt
-      ? 'border-[#008D3B] bg-[#ecfdf5] text-[#008D3B] ring-1 ring-[#008D3B]/30'
-      : 'border-gray-200 text-slate-700 hover:border-[#008D3B] hover:bg-[#f0fdf4]',
+      ? 'border-[#bcee01] bg-[#f9ffd9] text-[#7a9a00] ring-1 ring-[#bcee01]/40'
+      : 'border-gray-200 text-slate-700 hover:border-[#bcee01] hover:bg-[#fbffe8]',
   );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 animate-in fade-in zoom-in-95 duration-200">
         <h3 className="text-lg font-bold text-slate-900 mb-1">A few more questions</h3>
-        <p className="text-sm text-[#008D3B] mb-6">
+        <p className="text-sm text-[#7a9a00] mb-6">
           Since you selected self employed, please answer these quick questions.
         </p>
 
@@ -916,7 +809,7 @@ function GSTPopup({ onComplete }: { onComplete: (gstRegistered: string, gstVerif
           className={cn(
             'w-full rounded-xl py-3.5 text-sm font-bold text-white transition-all duration-150',
             canContinue
-              ? 'bg-[#008D3B] hover:bg-[#006b2c] hover:shadow-[0_8px_24px_-4px_rgba(0,141,59,0.45)] active:scale-[0.98]'
+              ? 'bg-[#bcee01] text-slate-900 hover:bg-[#a3c700] hover:shadow-[0_8px_24px_-4px_rgba(163,199,0,0.45)] active:scale-[0.98]'
               : 'bg-gray-200 text-gray-400 cursor-not-allowed',
           )}
         >
@@ -928,7 +821,7 @@ function GSTPopup({ onComplete }: { onComplete: (gstRegistered: string, gstVerif
 }
 
 /* ── CONFETTI PIECES ── */
-const CONFETTI_COLORS = ['#008D3B','#00e064','#FFD700','#FF6B35','#4A90D9','#C850C0','#E74C3C','#F39C12','#00b4d8'];
+const CONFETTI_COLORS = ['#7a9a00','#bcee01','#FFD700','#FF6B35','#4A90D9','#C850C0','#E74C3C','#F39C12','#00b4d8'];
 const CONFETTI_COUNT  = 56;
 
 // Deterministic pseudo-random so no hydration mismatch
@@ -967,7 +860,7 @@ function LoadingScreen() {
     <div style={{ position: 'relative', overflow: 'hidden', minHeight: '420px',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       justifyContent: 'center', padding: '32px 24px',
-      background: 'linear-gradient(135deg,#f0fdf4 0%,#fff 60%,#f0fdf4 100%)' }}>
+      background: 'linear-gradient(135deg,#f9ffe0 0%,#fff 60%,#f9ffe0 100%)' }}>
 
       <style>{`
         @keyframes confetti-fall {
@@ -985,8 +878,8 @@ function LoadingScreen() {
           to   { transform: translateY(0);    opacity: 1; }
         }
         @keyframes pulse-ring {
-          0%,100% { box-shadow: 0 0 0 0   rgba(0,141,59,0.35); }
-          50%     { box-shadow: 0 0 0 12px rgba(0,141,59,0); }
+          0%,100% { box-shadow: 0 0 0 0   rgba(163,199,0,0.35); }
+          50%     { box-shadow: 0 0 0 12px rgba(163,199,0,0); }
         }
       `}</style>
 
@@ -1003,7 +896,7 @@ function LoadingScreen() {
 
       {/* Heading */}
       <h2 style={{ fontFamily: 'sans-serif', fontWeight: 800, fontSize: 22,
-        color: '#008D3B', textAlign: 'center', margin: '0 0 8px',
+        color: '#7a9a00', textAlign: 'center', margin: '0 0 8px',
         animation: 'fade-up 0.5s ease 0.25s both' }}>
         Congratulations!
       </h2>
@@ -1012,14 +905,14 @@ function LoadingScreen() {
       <p style={{ fontFamily: 'sans-serif', fontSize: 15, fontWeight: 500,
         color: '#374151', textAlign: 'center', maxWidth: 260, margin: '0 0 28px',
         lineHeight: 1.45, animation: 'fade-up 0.5s ease 0.4s both' }}>
-        You&rsquo;re about to get a <span style={{ color: '#008D3B', fontWeight: 700 }}>better rate</span> on your car loan.
+        You&rsquo;re about to get a <span style={{ color: '#7a9a00', fontWeight: 700 }}>better rate</span> on your car loan.
       </p>
 
       {/* Spinner */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
         animation: 'fade-up 0.5s ease 0.55s both' }}>
         <span style={{ width: 32, height: 32, borderRadius: '50%',
-          border: '3px solid #008D3B', borderTopColor: 'transparent',
+          border: '3px solid #7a9a00', borderTopColor: 'transparent',
           display: 'inline-block', animation: 'spin 0.8s linear infinite',
           animationName: 'spin' }} />
         <p style={{ fontSize: 12, color: '#9ca3af', fontFamily: 'sans-serif' }}>
@@ -1048,10 +941,10 @@ function FireButton({ onClick, children, flex }: { onClick: () => void; children
       type="button"
       onClick={onClick}
       className={cn(
-        'flex items-center justify-center rounded-xl bg-[#008D3B] text-white',
+        'flex items-center justify-center rounded-xl bg-[#bcee01] text-slate-900',
         'font-heading font-bold text-[14px] sm:text-[15px] py-3.5 sm:py-4 mt-1.5',
-        'transition-all hover:bg-[#006b2c] active:scale-[0.98]',
-        'hover:shadow-[0_8px_24px_-4px_rgba(0,141,59,0.45)]',
+        'transition-all hover:bg-[#a3c700] active:scale-[0.98]',
+        'hover:shadow-[0_8px_24px_-4px_rgba(163,199,0,0.45)]',
         flex ? 'flex-1' : 'w-full',
       )}
     >

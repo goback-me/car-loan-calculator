@@ -109,7 +109,7 @@ const BRANDS: Record<Brand, { disqualifyUrl: string; fallbackUrl: string; lockKe
     } as React.CSSProperties,
   },
   '1300carmoney': {
-    disqualifyUrl: 'https://1300carmoney.hivesocial.live/disqaulify-page',
+    disqualifyUrl: 'https://1300carmoney.hivesocial.live/disqualify-page',
     fallbackUrl:   'https://1300carmoney.hivesocial.live/booking-step-2',
     lockKey:       'car_loan_disqualified_1300carmoney',
     vars: {

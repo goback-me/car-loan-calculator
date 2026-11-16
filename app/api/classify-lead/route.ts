@@ -9,7 +9,7 @@ const URLS = {
     bad:        'https://tryrevvy.com.au/thank-you/',
   },
   '1300carmoney': {
-    disqualify: 'https://1300carmoney.hivesocial.live/disqaulify-page',
+    disqualify: 'https://1300carmoney.hivesocial.live/disqualify-page',
     good:       'https://1300carmoney.hivesocial.live/booking-step-2',
     bad:        'https://1300carmoney.hivesocial.live/booking-step-2',
   },

@@ -38,7 +38,7 @@
     iframe.setAttribute('allowtransparency', 'true');
     iframe.style.cssText = [
       'width:100%',
-      'height:100%',
+      'height:500px', // fixed start height; resize messages set the real one (100% broke inside grid layouts)
       'min-height:500px',
       'border:none',
       'display:block',

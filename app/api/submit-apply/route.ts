@@ -48,8 +48,12 @@ export async function POST(req: NextRequest) {
     source: body.brand === '1300carmoney' ? 'apply-form-1300carmoney' : 'apply-form',
   };
 
-  // Comma-separated list of webhook URLs — split, trim, drop empties
-  const webhookUrls = (process.env.WEBHOOK_URL_QUIZ || '')
+  // Comma-separated list of webhook URLs — split, trim, drop empties.
+  // 1300 Car Money leads go only to their own webhook(s), never to Revvy's.
+  const webhookEnv = body.brand === '1300carmoney'
+    ? process.env.WEBHOOK_URL_QUIZ_1300
+    : process.env.WEBHOOK_URL_QUIZ;
+  const webhookUrls = (webhookEnv || '')
     .split(',')
     .map(u => u.trim())
     .filter(Boolean);

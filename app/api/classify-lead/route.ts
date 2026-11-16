@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// ── Redirect URLs ─────────────────────────────────────────────
-// Update BAD_URL once the second landing page is live
-const DISQUALIFY_URL = 'https://tryrevvy.com.au/appreciated/';
-const GOOD_URL       = 'https://tryrevvy.com.au/thank-you-appreciated/';
-const BAD_URL        = 'https://tryrevvy.com.au/thank-you/';
+// ── Redirect URLs per brand (keep in sync with BRANDS in CarLoanApply.tsx) ──
+// Update revvy.bad once the second landing page is live
+const URLS = {
+  revvy: {
+    disqualify: 'https://tryrevvy.com.au/appreciated/',
+    good:       'https://tryrevvy.com.au/thank-you-appreciated/',
+    bad:        'https://tryrevvy.com.au/thank-you/',
+  },
+  '1300carmoney': {
+    disqualify: 'https://1300carmoney.hivesocial.live/disqaulify-page',
+    good:       'https://1300carmoney.hivesocial.live/booking-step-2',
+    bad:        'https://1300carmoney.hivesocial.live/booking-step-2',
+  },
+} as const;
 
 type Quality = 'disqualify' | 'bad' | 'good';
 
@@ -76,9 +85,8 @@ export async function POST(req: NextRequest) {
     quality,
   });
 
-  const base = quality === 'disqualify' ? DISQUALIFY_URL
-             : quality === 'good'       ? GOOD_URL
-             :                           BAD_URL;
+  const urls = body.brand === '1300carmoney' ? URLS['1300carmoney'] : URLS.revvy;
+  const base = urls[quality];
 
   return NextResponse.json({ quality, redirectUrl: `${base}?${params.toString()}` });
 }

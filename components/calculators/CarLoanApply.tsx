@@ -95,14 +95,38 @@ const EMPTY_FORM: FormState = {
   utmAdset: '', utmAd: '', leadSource: '', campaign: '', adset: '', adName: '', pageUrl: '',
 };
 
+/* ── BRANDS — colours + redirect targets per placement ── */
+export type Brand = 'revvy' | '1300carmoney';
+
+const BRANDS: Record<Brand, { disqualifyUrl: string; fallbackUrl: string; lockKey: string; vars: React.CSSProperties }> = {
+  revvy: {
+    disqualifyUrl: 'https://tryrevvy.com.au/appreciated/',
+    fallbackUrl:   'https://tryrevvy.com.au/thank-you-appreciated/',
+    lockKey:       'car_loan_disqualified',
+    vars: {
+      '--q-accent': '#bcee01', '--q-accent-dark': '#7a9a00', '--q-accent-light': '#d4ff33',
+      '--q-accent-hover': '#a3c700', '--q-tint': '#f9ffd9', '--q-tint-hover': '#fbffe8', '--q-on-accent': '#1a2e05',
+    } as React.CSSProperties,
+  },
+  '1300carmoney': {
+    disqualifyUrl: 'https://1300carmoney.hivesocial.live/disqaulify-page',
+    fallbackUrl:   'https://1300carmoney.hivesocial.live/booking-step-2',
+    lockKey:       'car_loan_disqualified_1300carmoney',
+    vars: {
+      '--q-accent': '#FF9B00', '--q-accent-dark': '#1B2340', '--q-accent-light': '#FDBA2F',
+      '--q-accent-hover': '#E68A00', '--q-tint': '#FFF4E0', '--q-tint-hover': '#FFF9EE', '--q-on-accent': '#1B2340',
+    } as React.CSSProperties,
+  },
+};
+
 /* ── Shared disqualify helper — locks re-entry, then redirects the top frame ── */
-function goAppreciated() {
-  try { localStorage.setItem('car_loan_disqualified', '1'); } catch {}
-  (window.top || window).location.href = 'https://tryrevvy.com.au/appreciated/';
+function goAppreciated(brand: Brand) {
+  try { localStorage.setItem(BRANDS[brand].lockKey, '1'); } catch {}
+  (window.top || window).location.href = BRANDS[brand].disqualifyUrl;
 }
 
 /* ── MAIN ── */
-export default function CarLoanApply() {
+export default function CarLoanApply({ brand = 'revvy' }: { brand?: Brand }) {
   const [step, setStep]                 = useState(0);
   const [animDir, setAnimDir]           = useState<'forward' | 'back'>('forward');
   const [isAnimating, setIsAnimating]   = useState(false);
@@ -160,15 +184,15 @@ export default function CarLoanApply() {
   useEffect(() => {
     function checkDisqualified() {
       try {
-        if (localStorage.getItem('car_loan_disqualified') === '1') {
-          (window.top || window).location.href = 'https://tryrevvy.com.au/appreciated/';
+        if (localStorage.getItem(BRANDS[brand].lockKey) === '1') {
+          (window.top || window).location.href = BRANDS[brand].disqualifyUrl;
         }
       } catch {}
     }
     checkDisqualified();
     window.addEventListener('pageshow', checkDisqualified);
     return () => window.removeEventListener('pageshow', checkDisqualified);
-  }, []);
+  }, [brand]);
 
   const set = useCallback(<K extends keyof FormState>(key: K, val: FormState[K]) =>
     setForm(f => ({ ...f, [key]: val })), []);
@@ -188,19 +212,19 @@ export default function CarLoanApply() {
   const pick = useCallback(<K extends keyof FormState>(key: K, val: FormState[K]) => {
     // ── Instant disqualifiers — no point collecting more data ──
     if (key === 'employment' && val === 'retired-centrelink') {
-      goAppreciated();
+      goAppreciated(brand);
       return;
     }
     if (key === 'annualIncome' && val === 'under30k') {
-      goAppreciated();
+      goAppreciated(brand);
       return;
     }
     if (key === 'residency' && val === 'visa') {
-      goAppreciated();
+      goAppreciated(brand);
       return;
     }
     if (key === 'creditHistory' && val === 'bad') {
-      goAppreciated();
+      goAppreciated(brand);
       return;
     }
 
@@ -216,7 +240,7 @@ export default function CarLoanApply() {
     setAnimDir('forward');
     setIsAnimating(true);
     setTimeout(() => { setStep(s => s + 1); setIsAnimating(false); }, 200);
-  }, []);
+  }, [brand]);
 
   async function handleContactSubmit() {
     const errs: Partial<Record<'fullName'|'mobile'|'email', string>> = {};
@@ -232,18 +256,18 @@ export default function CarLoanApply() {
     fetch('/api/submit-apply', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, brand }),
     }).catch(() => {});
 
     // Classify lead server-side to get the correct redirect URL
     const res = await fetch('/api/classify-lead', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, brand }),
     }).catch(() => null);
 
     const { redirectUrl } = (res?.ok ? await res.json() : null) ?? {
-      redirectUrl: 'https://tryrevvy.com.au/thank-you-appreciated/',
+      redirectUrl: BRANDS[brand].fallbackUrl,
     };
 
     setTimeout(() => {
@@ -259,17 +283,17 @@ export default function CarLoanApply() {
     goNext();
   }, [goNext]);
 
-  if (isLoading) return <LoadingScreen />;
+  if (isLoading) return <div style={BRANDS[brand].vars}><LoadingScreen /></div>;
 
   return (
-    <div className="w-full bg-white pb-8">
+    <div className="w-full bg-white pb-8" style={BRANDS[brand].vars}>
       <div className="w-full bg-white">
 
-        <div className="h-[2px] bg-gradient-to-r from-[#7a9a00] to-[#bcee01]" />
+        <div className="h-[2px] bg-gradient-to-r from-[var(--q-accent-dark)] to-[var(--q-accent)]" />
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 pt-3 sm:pt-4">
-          <span className="inline-flex items-center bg-[#bcee01] text-slate-900 rounded-full px-3 py-1 text-[10px] sm:text-[11px] font-bold tracking-widest uppercase">
+          <span className="inline-flex items-center bg-[var(--q-accent)] text-slate-900 rounded-full px-3 py-1 text-[10px] sm:text-[11px] font-bold tracking-widest uppercase">
             Find My Best Rate
           </span>
         </div>
@@ -280,8 +304,8 @@ export default function CarLoanApply() {
             className="h-full rounded-full transition-[width] duration-500 ease-out relative overflow-hidden"
             style={{
               width: `${progress}%`,
-              background: 'linear-gradient(90deg, #7a9a00, #bcee01 60%, #d4ff33)',
-              boxShadow: '0 0 8px rgba(188,238,1,0.55)',
+              background: 'linear-gradient(90deg, var(--q-accent-dark), var(--q-accent) 60%, var(--q-accent-light))',
+              boxShadow: '0 0 8px color-mix(in srgb, var(--q-accent) 55%, transparent)',
             }}
           >
             {/* shimmer sweep */}
@@ -344,7 +368,7 @@ export default function CarLoanApply() {
 
       {/* GST Popup — collects GST data; API decides qualification */}
       {showGSTPopup && (
-        <GSTPopup onComplete={onGSTComplete} />
+        <GSTPopup onComplete={onGSTComplete} onDisqualify={() => goAppreciated(brand)} />
       )}
     </div>
   );
@@ -364,8 +388,8 @@ function StepVehicleType({ selected, onSelect }: { selected: string; onSelect: (
             className={cn(
               'group flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-center cursor-pointer transition-all duration-150',
               selected === v.id
-                ? 'border-[#bcee01] bg-[#f9ffd9] shadow-sm ring-1 ring-[#bcee01]/40'
-                : 'border-gray-200 bg-white hover:border-[#bcee01] hover:bg-[#fbffe8]',
+                ? 'border-[var(--q-accent)] bg-[var(--q-tint)] shadow-sm ring-1 ring-[var(--q-accent)]/40'
+                : 'border-gray-200 bg-white hover:border-[var(--q-accent)] hover:bg-[var(--q-tint-hover)]',
             )}
           >
             <img
@@ -404,8 +428,8 @@ function StepVehicleCondition({ selected, onSelect, onBack }: { selected: string
             className={cn(
               'group flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-center cursor-pointer transition-all duration-150',
               selected === opt.id
-                ? 'border-[#bcee01] bg-[#f9ffd9] shadow-sm ring-1 ring-[#bcee01]/40'
-                : 'border-gray-200 bg-white hover:border-[#bcee01] hover:bg-[#fbffe8]',
+                ? 'border-[var(--q-accent)] bg-[var(--q-tint)] shadow-sm ring-1 ring-[var(--q-accent)]/40'
+                : 'border-gray-200 bg-white hover:border-[var(--q-accent)] hover:bg-[var(--q-tint-hover)]',
             )}
           >
             <img
@@ -439,14 +463,14 @@ function StepPurchasePrice({ value, onChange, onNext, onBack }: {
 
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs sm:text-sm text-gray-500 font-medium">${MIN_PRICE.toLocaleString()}</span>
-        <span className="text-xl sm:text-3xl font-bold text-[#7a9a00]">${value.toLocaleString()}</span>
+        <span className="text-xl sm:text-3xl font-bold text-[var(--q-accent-dark)]">${value.toLocaleString()}</span>
         <span className="text-xs sm:text-sm text-gray-500 font-medium">${(MAX_PRICE / 1000).toFixed(0)}k</span>
       </div>
 
       <div className="relative mb-4 sm:mb-6">
         <div className="relative h-2 bg-gray-100 rounded-full">
           <div
-            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#7a9a00] to-[#bcee01] rounded-full"
+            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[var(--q-accent-dark)] to-[var(--q-accent)] rounded-full"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -463,7 +487,7 @@ function StepPurchasePrice({ value, onChange, onNext, onBack }: {
           style={{ margin: 0 }}
         />
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-[#bcee01] rounded-full shadow-md pointer-events-none"
+          className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-[var(--q-accent)] rounded-full shadow-md pointer-events-none"
           style={{ left: `calc(${pct}% - 10px)` }}
         />
       </div>
@@ -490,13 +514,13 @@ function StepEmployment({ selected, onSelect, onBack }: { selected: string; onSe
               className={cn(
                 'w-full text-left rounded-xl border px-3 py-2.5 sm:py-3 transition-all duration-150 flex items-center gap-3',
                 active
-                  ? 'border-[#bcee01] bg-[#f9ffd9] shadow-sm ring-1 ring-[#bcee01]/40'
-                  : 'border-gray-200 bg-white hover:border-[#bcee01] hover:bg-[#fbffe8]',
+                  ? 'border-[var(--q-accent)] bg-[var(--q-tint)] shadow-sm ring-1 ring-[var(--q-accent)]/40'
+                  : 'border-gray-200 bg-white hover:border-[var(--q-accent)] hover:bg-[var(--q-tint-hover)]',
               )}
             >
               <span className="text-2xl leading-none shrink-0">{e.emoji}</span>
-              <span className={cn('flex-1 text-sm font-semibold', active ? 'text-[#7a9a00]' : 'text-slate-700')}>{e.label}</span>
-              {active && <span className="w-5 h-5 rounded-full bg-[#bcee01] flex items-center justify-center shrink-0"><svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="#1a2e05" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span>}
+              <span className={cn('flex-1 text-sm font-semibold', active ? 'text-[var(--q-accent-dark)]' : 'text-slate-700')}>{e.label}</span>
+              {active && <span className="w-5 h-5 rounded-full bg-[var(--q-accent)] flex items-center justify-center shrink-0"><svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="var(--q-on-accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span>}
             </button>
           );
         })}
@@ -543,7 +567,7 @@ function StepAnnualIncome({ onSelect, onBack }: { selected: string; onSelect: (v
 
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs sm:text-sm text-gray-500 font-medium">$10k</span>
-        <span className="text-xl sm:text-3xl font-bold text-[#7a9a00]">{formatIncome(value)}</span>
+        <span className="text-xl sm:text-3xl font-bold text-[var(--q-accent-dark)]">{formatIncome(value)}</span>
         <span className="text-xs sm:text-sm text-gray-500 font-medium">$120k+</span>
       </div>
       <p className="text-center text-xs text-gray-400 mb-3 sm:mb-5">{incomeRangeLabel(value)}</p>
@@ -551,7 +575,7 @@ function StepAnnualIncome({ onSelect, onBack }: { selected: string; onSelect: (v
       <div className="relative mb-4 sm:mb-6">
         <div className="relative h-2 bg-gray-100 rounded-full">
           <div
-            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#7a9a00] to-[#bcee01] rounded-full"
+            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[var(--q-accent-dark)] to-[var(--q-accent)] rounded-full"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -568,7 +592,7 @@ function StepAnnualIncome({ onSelect, onBack }: { selected: string; onSelect: (v
           style={{ margin: 0 }}
         />
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-[#bcee01] rounded-full shadow-md pointer-events-none"
+          className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-[var(--q-accent)] rounded-full shadow-md pointer-events-none"
           style={{ left: `calc(${pct}% - 10px)` }}
         />
       </div>
@@ -595,16 +619,16 @@ function StepResidency({ selected, onSelect, onBack }: { selected: string; onSel
               className={cn(
                 'w-full text-left rounded-xl border px-3 py-2.5 sm:py-3 transition-all duration-150 flex items-center gap-3',
                 active
-                  ? 'border-[#bcee01] bg-[#f9ffd9] shadow-sm ring-1 ring-[#bcee01]/40'
-                  : 'border-gray-200 bg-white hover:border-[#bcee01] hover:bg-[#fbffe8]',
+                  ? 'border-[var(--q-accent)] bg-[var(--q-tint)] shadow-sm ring-1 ring-[var(--q-accent)]/40'
+                  : 'border-gray-200 bg-white hover:border-[var(--q-accent)] hover:bg-[var(--q-tint-hover)]',
               )}
             >
               {r.img
                 ? <img src={r.img} alt={r.label} className="w-7 h-7 object-contain shrink-0 rounded-sm" />
                 : <span className="text-2xl leading-none shrink-0">{r.emoji}</span>
               }
-              <span className={cn('flex-1 text-sm font-semibold', active ? 'text-[#7a9a00]' : 'text-slate-700')}>{r.label}</span>
-              {active && <span className="w-5 h-5 rounded-full bg-[#bcee01] flex items-center justify-center shrink-0"><svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="#1a2e05" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span>}
+              <span className={cn('flex-1 text-sm font-semibold', active ? 'text-[var(--q-accent-dark)]' : 'text-slate-700')}>{r.label}</span>
+              {active && <span className="w-5 h-5 rounded-full bg-[var(--q-accent)] flex items-center justify-center shrink-0"><svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="var(--q-on-accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span>}
             </button>
           );
         })}
@@ -632,13 +656,13 @@ function StepCreditHistory({ selected, onSelect, onBack }: { selected: string; o
               className={cn(
                 'w-full text-left rounded-xl border px-3 py-2.5 sm:py-3 transition-all duration-150 flex items-center gap-3',
                 active
-                  ? 'border-[#bcee01] bg-[#f9ffd9] shadow-sm ring-1 ring-[#bcee01]/40'
-                  : 'border-gray-200 bg-white hover:border-[#bcee01] hover:bg-[#fbffe8]',
+                  ? 'border-[var(--q-accent)] bg-[var(--q-tint)] shadow-sm ring-1 ring-[var(--q-accent)]/40'
+                  : 'border-gray-200 bg-white hover:border-[var(--q-accent)] hover:bg-[var(--q-tint-hover)]',
               )}
             >
               <span className="text-2xl leading-none shrink-0">{c.emoji}</span>
-              <span className={cn('flex-1 text-sm font-semibold', active ? 'text-[#7a9a00]' : 'text-slate-700')}>{c.label}</span>
-              {active && <span className="w-5 h-5 rounded-full bg-[#bcee01] flex items-center justify-center shrink-0"><svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="#1a2e05" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span>}
+              <span className={cn('flex-1 text-sm font-semibold', active ? 'text-[var(--q-accent-dark)]' : 'text-slate-700')}>{c.label}</span>
+              {active && <span className="w-5 h-5 rounded-full bg-[var(--q-accent)] flex items-center justify-center shrink-0"><svg width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="var(--q-on-accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span>}
             </button>
           );
         })}
@@ -664,8 +688,8 @@ function StepState({ selected, onSelect, onBack }: { selected: string; onSelect:
             className={cn(
               'rounded-xl border py-3 text-sm font-semibold text-center transition-all duration-150',
               selected === s
-                ? 'border-[#bcee01] bg-[#f9ffd9] text-[#7a9a00] shadow-sm ring-1 ring-[#bcee01]/40'
-                : 'border-gray-200 text-slate-700 hover:border-[#bcee01] hover:bg-[#fbffe8]',
+                ? 'border-[var(--q-accent)] bg-[var(--q-tint)] text-[var(--q-accent-dark)] shadow-sm ring-1 ring-[var(--q-accent)]/40'
+                : 'border-gray-200 text-slate-700 hover:border-[var(--q-accent)] hover:bg-[var(--q-tint-hover)]',
             )}
           >
             {s}
@@ -743,7 +767,7 @@ function StepContact({ form, set, errors, onSubmit, onBack }: ContactProps) {
 }
 
 /* ── GST POPUP ── */
-function GSTPopup({ onComplete }: { onComplete: (gstRegistered: string, gstVerified: string) => void }) {
+function GSTPopup({ onComplete, onDisqualify }: { onComplete: (gstRegistered: string, gstVerified: string) => void; onDisqualify: () => void }) {
   const [abn, setAbn] = useState<'yes' | 'no' | null>(null);
   const [gst, setGst] = useState<'yes' | 'no' | null>(null);
 
@@ -754,7 +778,7 @@ function GSTPopup({ onComplete }: { onComplete: (gstRegistered: string, gstVerif
   function handleAbn(val: 'yes' | 'no') {
     setAbn(val);
     setGst(null);
-    if (val === 'no') goAppreciated();
+    if (val === 'no') onDisqualify();
   }
 
   function handleContinue() {
@@ -765,15 +789,15 @@ function GSTPopup({ onComplete }: { onComplete: (gstRegistered: string, gstVerif
   const btnCls = (selected: 'yes' | 'no' | null, opt: 'yes' | 'no') => cn(
     'rounded-xl border py-3 text-sm font-semibold transition-all duration-150',
     selected === opt
-      ? 'border-[#bcee01] bg-[#f9ffd9] text-[#7a9a00] ring-1 ring-[#bcee01]/40'
-      : 'border-gray-200 text-slate-700 hover:border-[#bcee01] hover:bg-[#fbffe8]',
+      ? 'border-[var(--q-accent)] bg-[var(--q-tint)] text-[var(--q-accent-dark)] ring-1 ring-[var(--q-accent)]/40'
+      : 'border-gray-200 text-slate-700 hover:border-[var(--q-accent)] hover:bg-[var(--q-tint-hover)]',
   );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 animate-in fade-in zoom-in-95 duration-200">
         <h3 className="text-lg font-bold text-slate-900 mb-1">A few more questions</h3>
-        <p className="text-sm text-[#7a9a00] mb-6">
+        <p className="text-sm text-[var(--q-accent-dark)] mb-6">
           Since you selected self employed, please answer these quick questions.
         </p>
 
@@ -809,7 +833,7 @@ function GSTPopup({ onComplete }: { onComplete: (gstRegistered: string, gstVerif
           className={cn(
             'w-full rounded-xl py-3.5 text-sm font-bold text-white transition-all duration-150',
             canContinue
-              ? 'bg-[#bcee01] text-slate-900 hover:bg-[#a3c700] hover:shadow-[0_8px_24px_-4px_rgba(163,199,0,0.45)] active:scale-[0.98]'
+              ? 'bg-[var(--q-accent)] text-slate-900 hover:bg-[var(--q-accent-hover)] hover:shadow-[0_8px_24px_-4px_color-mix(in_srgb,var(--q-accent-hover)_45%,transparent)] active:scale-[0.98]'
               : 'bg-gray-200 text-gray-400 cursor-not-allowed',
           )}
         >
@@ -821,7 +845,7 @@ function GSTPopup({ onComplete }: { onComplete: (gstRegistered: string, gstVerif
 }
 
 /* ── CONFETTI PIECES ── */
-const CONFETTI_COLORS = ['#7a9a00','#bcee01','#FFD700','#FF6B35','#4A90D9','#C850C0','#E74C3C','#F39C12','#00b4d8'];
+const CONFETTI_COLORS = ['var(--q-accent-dark)','var(--q-accent)','#FFD700','#FF6B35','#4A90D9','#C850C0','#E74C3C','#F39C12','#00b4d8'];
 const CONFETTI_COUNT  = 56;
 
 // Deterministic pseudo-random so no hydration mismatch
@@ -860,7 +884,7 @@ function LoadingScreen() {
     <div style={{ position: 'relative', overflow: 'hidden', minHeight: '420px',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       justifyContent: 'center', padding: '32px 24px',
-      background: 'linear-gradient(135deg,#f9ffe0 0%,#fff 60%,#f9ffe0 100%)' }}>
+      background: 'linear-gradient(135deg,var(--q-tint) 0%,#fff 60%,var(--q-tint) 100%)' }}>
 
       <style>{`
         @keyframes confetti-fall {
@@ -896,7 +920,7 @@ function LoadingScreen() {
 
       {/* Heading */}
       <h2 style={{ fontFamily: 'sans-serif', fontWeight: 800, fontSize: 22,
-        color: '#7a9a00', textAlign: 'center', margin: '0 0 8px',
+        color: 'var(--q-accent-dark)', textAlign: 'center', margin: '0 0 8px',
         animation: 'fade-up 0.5s ease 0.25s both' }}>
         Congratulations!
       </h2>
@@ -905,14 +929,14 @@ function LoadingScreen() {
       <p style={{ fontFamily: 'sans-serif', fontSize: 15, fontWeight: 500,
         color: '#374151', textAlign: 'center', maxWidth: 260, margin: '0 0 28px',
         lineHeight: 1.45, animation: 'fade-up 0.5s ease 0.4s both' }}>
-        You&rsquo;re about to get a <span style={{ color: '#7a9a00', fontWeight: 700 }}>better rate</span> on your car loan.
+        You&rsquo;re about to get a <span style={{ color: 'var(--q-accent-dark)', fontWeight: 700 }}>better rate</span> on your car loan.
       </p>
 
       {/* Spinner */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
         animation: 'fade-up 0.5s ease 0.55s both' }}>
         <span style={{ width: 32, height: 32, borderRadius: '50%',
-          border: '3px solid #7a9a00', borderTopColor: 'transparent',
+          border: '3px solid var(--q-accent-dark)', borderTopColor: 'transparent',
           display: 'inline-block', animation: 'spin 0.8s linear infinite',
           animationName: 'spin' }} />
         <p style={{ fontSize: 12, color: '#9ca3af', fontFamily: 'sans-serif' }}>
@@ -941,10 +965,10 @@ function FireButton({ onClick, children, flex }: { onClick: () => void; children
       type="button"
       onClick={onClick}
       className={cn(
-        'flex items-center justify-center rounded-xl bg-[#bcee01] text-slate-900',
+        'flex items-center justify-center rounded-xl bg-[var(--q-accent)] text-slate-900',
         'font-heading font-bold text-[14px] sm:text-[15px] py-3.5 sm:py-4 mt-1.5',
-        'transition-all hover:bg-[#a3c700] active:scale-[0.98]',
-        'hover:shadow-[0_8px_24px_-4px_rgba(163,199,0,0.45)]',
+        'transition-all hover:bg-[var(--q-accent-hover)] active:scale-[0.98]',
+        'hover:shadow-[0_8px_24px_-4px_color-mix(in_srgb,var(--q-accent-hover)_45%,transparent)]',
         flex ? 'flex-1' : 'w-full',
       )}
     >

@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     // Sydney local time — toISOString() is UTC and rolls the date back a day
     // for anything submitted in the early-morning AEDT/AEST hours.
     submitted_at: new Date().toLocaleString('sv-SE', { timeZone: 'Australia/Sydney' }).replace(' ', 'T'),
-    source: 'apply-form',
+    source: body.brand === '1300carmoney' ? 'apply-form-1300carmoney' : 'apply-form',
   };
 
   // Comma-separated list of webhook URLs — split, trim, drop empties
